@@ -1,11 +1,15 @@
 import re
+from collections import defaultdict
 from typing import Generator
 
 from core.env import env
 from django.db.models import (
+    F,
     QuerySet,
     Value,
+    Window,
 )
+from django.db.models.functions import Rank
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -101,39 +105,85 @@ class Rag:
     def top_k_chunks(query: str, k: int = 5) -> list[str]:
         embedding_query = Rag.embedding.embed_query(query)
 
-        bm25_search = '{"match": {"value": "{%s}"}}' % query
-        qs = ChunkDocumeto.objects.raw(
-            f"""
-            WITH bm25_ranked AS (
-                SELECT id, RANK() OVER (ORDER BY score DESC) AS rank
-                FROM (
-                SELECT id, paradedb.score(id) AS score
-                FROM ia_chunkdocumeto
-                WHERE conteudo @@@ '{bm25_search}'::pdb.query
-                ORDER BY paradedb.score(id) DESC
-                LIMIT 20
-                ) AS bm25_score
-            ),
-            semantic_search AS (
-                SELECT id, RANK() OVER (ORDER BY embedding <=> '{embedding_query}') AS rank
-                FROM ia_chunkdocumeto
-                ORDER BY embedding <=> '{embedding_query}'
-                LIMIT 20
+        # bm25_search = '{"match": {"value": "{%s}"}}' % query
+        # qs = ChunkDocumeto.objects.raw(
+        #     f"""
+        #     WITH bm25_ranked AS (
+        #         SELECT id, RANK() OVER (ORDER BY score DESC) AS rank
+        #         FROM (
+        #         SELECT id, paradedb.score(id) AS score
+        #         FROM ia_chunkdocumeto
+        #         WHERE conteudo @@@ '{bm25_search}'::pdb.query
+        #         ORDER BY paradedb.score(id) DESC
+        #         LIMIT 20
+        #         ) AS bm25_score
+        #     ),
+        #     semantic_search AS (
+        #         SELECT id, RANK() OVER (ORDER BY embedding <=> '{embedding_query}') AS rank
+        #         FROM ia_chunkdocumeto
+        #         ORDER BY embedding <=> '{embedding_query}'
+        #         LIMIT 20
+        #     )
+        #     SELECT
+        #         COALESCE(semantic_search.id, bm25_ranked.id) AS id,
+        #         COALESCE(1.0 / (60 + semantic_search.rank), 0.0) +
+        #         COALESCE(1.0 / (60 + bm25_ranked.rank), 0.0) AS score,
+        #         ia_chunkdocumeto.conteudo,
+        #         ia_chunkdocumeto.embedding
+        #     FROM semantic_search
+        #     FULL OUTER JOIN bm25_ranked ON semantic_search.id = bm25_ranked.id
+        #     JOIN ia_chunkdocumeto ON ia_chunkdocumeto.id = COALESCE(semantic_search.id, bm25_ranked.id)
+        #     ORDER BY score DESC, conteudo
+        #     LIMIT 10;
+        # """  # noqa
+        # )
+
+        ranked_by_bm25 = (
+            ChunkDocumeto.objects.annotate(
+                score=BM25Score('id'),
+                rank=Window(expression=Rank(), order_by=F('score').desc()),
             )
-            SELECT
-                COALESCE(semantic_search.id, bm25_ranked.id) AS id,
-                COALESCE(1.0 / (60 + semantic_search.rank), 0.0) +
-                COALESCE(1.0 / (60 + bm25_ranked.rank), 0.0) AS score,
-                ia_chunkdocumeto.conteudo,
-                ia_chunkdocumeto.embedding
-            FROM semantic_search
-            FULL OUTER JOIN bm25_ranked ON semantic_search.id = bm25_ranked.id
-            JOIN ia_chunkdocumeto ON ia_chunkdocumeto.id = COALESCE(semantic_search.id, bm25_ranked.id)
-            ORDER BY score DESC, conteudo
-            LIMIT 10;
-        """
+            .filter(
+                conteudo__bm25=PdbQueryCast(
+                    Value(f'{{"match": {{"value": "{query}"}}}}')
+                )
+            )
+            .order_by('-score')[:20]
         )
 
+        ranked_by_semantic = (
+            ChunkDocumeto.objects.annotate(
+                score=CosineDistance('embedding', embedding_query),
+                rank=Window(expression=Rank(), order_by=F('score').asc()),
+            )
+            .order_by('score')[:20]
+        )
+
+        agrupado = defaultdict(list)
+        for chunk in ranked_by_bm25:
+            agrupado[chunk.id].append(('bm25', chunk))
+        for chunk in ranked_by_semantic:
+            agrupado[chunk.id].append(('semantic', chunk))
+
+        bm25_weight = 0.6
+        semantic_weight = 0.4
+        combinado = []
+
+        for chunks in agrupado.values():
+            rank_bm25 = next((c.rank for t, c in chunks if t == 'bm25'), 20)
+            rank_sem = next((c.rank for t, c in chunks if t == 'semantic'), 20)
+
+            norm_bm25 = 1 - ((rank_bm25 - 1) / 19)
+            norm_sem = 1 - ((rank_sem - 1) / 19)
+
+            total_score = bm25_weight * norm_bm25 + semantic_weight * norm_sem
+
+            representante = chunks[0][1]
+            representante.score = total_score
+            combinado.append(representante)
+
+        combinado.sort(key=lambda x: x.score, reverse=True)
+        qs = combinado[:k]
         return [chunk.conteudo for chunk in qs]
 
     @staticmethod
