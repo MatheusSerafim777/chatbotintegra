@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contas.models import Usuario
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import Field
@@ -60,6 +61,71 @@ class ChunkDocumeto(models.Model):
                 name='bm25_index_conteudo',
             ),
         ]
+
+    def __str__(self):
+        return self.conteudo[:50]
+
+
+class RespostaCanonica(models.Model):
+    pergunta = models.TextField()
+    embedding = VectorField()
+    resposta = models.TextField()
+
+    def __str__(self):
+        return self.pergunta
+
+
+class Conversa(models.Model):
+    usuario = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='conversas',
+    )
+    nome = models.CharField(max_length=50)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.nome
+
+
+class Mensagem(models.Model):
+    class OpcoesTipo(models.TextChoices):
+        USUARIO = 'USUARIO', 'Usuário'
+        ASSISTENTE = 'ASSISTENTE', 'Assistente'
+
+    conversa = models.ForeignKey(
+        Conversa,
+        on_delete=models.CASCADE,
+        related_name='mensagens',
+    )
+
+    mensagem_anterior = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        related_name='filhos',
+        null=True,
+        blank=True,
+    )
+
+    resposta_canonica = models.ForeignKey(
+        RespostaCanonica,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+    )
+
+    tipo_usuario = models.CharField(
+        max_length=20,
+        choices=OpcoesTipo.choices,
+    )
+
+    like = models.BooleanField(
+        null=True,
+        blank=True,
+    )
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+    conteudo = models.TextField()
 
     def __str__(self):
         return self.conteudo[:50]
