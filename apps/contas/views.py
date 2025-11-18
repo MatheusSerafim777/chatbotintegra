@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from django.views import View
 from inertia import InertiaResponse, render
 
-from contas.forms import SigninForm
+from contas.forms import CadastroForm, SigninForm
 
 
 class LoginView(View):
@@ -34,3 +34,11 @@ class LoginView(View):
         login(request, form.get_user())
 
         return redirect('index')
+
+class CadastroView(View):
+    form_class = CadastroForm
+    def get(self, request:HttpRequest):
+        context = {
+            'form': self.form_class(),
+        }
+        return render (request, 'Contas/Cadastro', context)

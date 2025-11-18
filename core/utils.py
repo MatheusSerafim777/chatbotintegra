@@ -1,9 +1,9 @@
-from django.forms import Form
+from django.forms import BaseModelForm, Form, ModelForm
 from inertia.utils import InertiaJsonEncoder
 
 
 class CustomJsonEncoder(InertiaJsonEncoder):
-    def _form_encoder(self, form: Form):
+    def _form_encoder(self, form: BaseModelForm):
         fields = []
 
         for bound_field in form:
@@ -43,7 +43,7 @@ class CustomJsonEncoder(InertiaJsonEncoder):
         }
 
     def default(self, obj):
-        if isinstance(obj, Form):
+        if isinstance(obj, (ModelForm, Form)):
             return self._form_encoder(obj)
 
         return super().default(obj)
