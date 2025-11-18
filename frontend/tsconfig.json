@@ -1,0 +1,55 @@
+{
+    "compilerOptions": {
+        "composite": true,
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "lib": [
+            "ES2020",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "module": "ESNext",
+        "skipLibCheck": true,
+        // Bundler mode
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "preserve",
+        // Linting
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        // Path mapping
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "./js/*"
+            ],
+            "@/types": [
+                "types/index.ts"
+            ]
+        },
+        // Vue support
+        "types": [
+            "vite/client"
+        ]
+    },
+    "include": [
+        "js/**/*.ts",
+        "js/**/*.d.ts",
+        "js/**/*.tsx",
+        "js/**/*.vue",
+        "js/env.d.ts",
+        "types/index.ts",
+        "types/types.ts",
+        "js/types/djangoForm.ts"
+    ],
+    "references": [
+        {
+            "path": "./tsconfig.node.json"
+        }
+    ]
+}

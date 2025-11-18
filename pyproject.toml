@@ -1,39 +1,31 @@
 [project]
 name = "integracar-chatbot"
 version = "0.1.0"
-description = "Add your description here"
+description = "Chatbot do IntegraCAR"
 readme = "README.md"
-requires-python = ">=3.13"
-
+requires-python = ">=3.12"
 dependencies = [
-    "django>=5.2.6",
-    "django-cotton>=2.1.3",
-    "django-cte>=2.0.0",
-    "django-htmx>=1.26.0",
-    "django-q2>=1.8.0",
-    "django-widget-tweaks>=1.5.0",
-    "djlint>=1.36.4",
-    "docling>=2.54.0",
-    "faiss-cpu>=1.12.0",
-    "langchain>=0.3.27",
-    "langchain-community>=0.3.29",
-    "langchain-groq>=0.3.8",
-    "langchain-ollama>=0.3.8",
-    "langchain-openai>=0.3.33",
-    "langchain-voyageai>=0.1.7",
+    "django-environ>=0.11.2",
+    "django>=5.1.4",
+    "django-vite>=3.0.5",
+    "inertia-django>=0.6.0",
+    "psycopg>=3.2.3",
+    "psycopg-binary>=3.2.3",
+    "whitenoise>=6.8.2",
+    "gunicorn>=23.0.0",
+    "langchain>=1.0.7",
+    "langchain-openai>=1.0.3",
+    "langchain-community>=0.4.1",
     "pgvector>=0.4.1",
-    "psycopg2-binary>=2.9.10",
-    "pydantic-ai>=1.0.10",
-    "pydantic-settings>=2.10.1",
-    "pypdf>=6.1.0",
-    "taskipy>=1.14.1",
+    "django-ninja>=1.5.0",
+    "django-q2>=1.8.0",
 ]
-
 
 [dependency-groups]
 dev = [
     "djlint>=1.36.4",
-    "ruff>=0.13.1",
+    "ruff>=0.14.5",
+    "taskipy>=1.14.1",
 ]
 
 
@@ -51,7 +43,7 @@ format = "ruff check . --fix && ruff format . && djlint . --reformat --quiet"
 
 [tool.ruff]
 line-length = 79
-extend-exclude = ["migrations", "postgres_data"]
+extend-exclude = ["migrations", "postgres_data", "frontend"]
 
 
 [tool.ruff.lint]

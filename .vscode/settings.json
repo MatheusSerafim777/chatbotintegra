@@ -1,11 +1,9 @@
 {
     "python.analysis.extraPaths": [
-        "chatbot",
-        "chatbot/apps",
+        "apps",
     ],
     "python.autoComplete.extraPaths": [
-        "chatbot",
-        "chatbot/apps",
+        "apps",
     ],
     "python.analysis.autoSearchPaths": true,
     "python.analysis.autoImportCompletions": true,
@@ -19,7 +17,7 @@
             "depth": 20
         },
         {
-            "name": "django_htmx",
+            "name": "inertia",
             "depth": 20
         },
     ],

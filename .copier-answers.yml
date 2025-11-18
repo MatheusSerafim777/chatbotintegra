@@ -1,0 +1,11 @@
+# Changes here will be overwritten by Copier
+_commit: v0.18.1
+_src_path: gh:sarthakjariwala/django-vite-inertia
+allauth: false
+database: postgresql
+docker_dev: true
+docker_prod: true
+frontend: vue
+project_name: core
+tailwind_css: true
+

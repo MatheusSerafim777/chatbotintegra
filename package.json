@@ -1,0 +1,31 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "TAILWIND_MODE=watch vite",
+    "build": "TAILWIND_MODE=build vite build"
+  },
+  "overrides": {
+    "vite": {
+      "rollup": "npm:@rollup/wasm-node"
+    }
+  },
+  "dependencies": {
+    "@inertiajs/vue3": "^2.0.0",
+    "axios": "^1.7.9",
+    "daisyui": "^5.5.5",
+    "markdown-it": "^14.1.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.17",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^24.10.1",
+    "@types/vue": "^1.0.31",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.6",
+    "vue-tsc": "^3.1.4"
+  }
+}
