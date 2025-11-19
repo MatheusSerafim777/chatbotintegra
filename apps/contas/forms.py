@@ -1,7 +1,8 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordMixin
+
 from contas.models import Usuario
-from django.contrib.auth.forms import SetPasswordMixin
+
 
 class FormSeriazableMixin:
     def as_dict(self):
@@ -42,11 +43,19 @@ class CadastroForm(forms.ModelForm, SetPasswordMixin):
         kwargs['use_required_attribute'] = False
         super().__init__(*args, **kwargs)
 
-        self.fields['name'].widget.attrs['icon'] = "bi bi-person"
+        self.fields['name'].widget.attrs['icon'] = 'bi bi-person'
         self.fields['email'].widget.attrs['icon'] = 'bi bi-envelope-fill'
         self.fields['password1'].widget.attrs['icon'] = 'bi bi-key-fill'
         self.fields['password2'].widget.attrs['icon'] = 'bi bi-key-fill'
 
+        placeholders = {
+            'email': 'Email',
+            'name': 'Nome',
+            'password1': 'Senha',
+            'password2': 'Confirme a senha',
+        }
+        for field_name, field in self.fields.items():
+            field.widget.attrs['placeholder'] = placeholders[field_name]
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -62,4 +71,3 @@ class CadastroForm(forms.ModelForm, SetPasswordMixin):
         user = super().save(commit=False)
         user = self.set_password_and_save(user, commit=commit)
         return user
-

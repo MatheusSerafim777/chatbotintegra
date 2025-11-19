@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import LayoutAnonimo from '@/components/LayoutAnonimo.vue';
-import Chat from '@/components/Chat/Chat.vue';
+import ChatComponente from '@/components/Chat/ChatComponente.vue';
 </script>
 
 <template>
     <LayoutAnonimo>
-        <Chat />
+        <ChatComponente />
     </LayoutAnonimo>
 </template> 

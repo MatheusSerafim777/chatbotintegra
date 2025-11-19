@@ -35,10 +35,26 @@ class LoginView(View):
 
         return redirect('index')
 
+
 class CadastroView(View):
     form_class = CadastroForm
-    def get(self, request:HttpRequest):
+    template = 'Contas/Cadastro'
+
+    def get(self, request: HttpRequest):
         context = {
             'form': self.form_class(),
         }
-        return render (request, 'Contas/Cadastro', context)
+        return render(request, self.template, context)
+
+    def post(self, request: HttpRequest) -> InertiaResponse:
+        form = self.form_class(request.POST)
+
+        if not form.is_valid():
+            context = {'form': form}
+            return render(request, 'partials/form.html', context)
+
+        form.save()
+
+        login(request, form.instance)
+
+        return render(request, self.template)

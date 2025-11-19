@@ -16,5 +16,5 @@ const mensagens = ref([
 
 <template>
     <Chat v-if="page.props.user" :mensagens="mensagens" />
-    <ChatAnonimo />
+    <ChatAnonimo v-else/>
 </template>

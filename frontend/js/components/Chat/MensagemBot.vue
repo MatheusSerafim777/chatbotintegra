@@ -3,8 +3,6 @@ const props = defineProps<{ mensagem: string }>();
 import markdownit from 'markdown-it';
 
 const md = markdownit();
-console.log(md.render(props.mensagem));
-
 </script>
 
 <template>
@@ -12,8 +10,8 @@ console.log(md.render(props.mensagem));
 
         <div v-if="mensagem" class="markdown" v-html="md.render(mensagem)"></div>
         <div v-else class="inline-grid *:[grid-area:1/1]">
-            <div class="status status-warning animate-ping status-lg"></div>
-            <div class="status status-warning status-lg"></div>
+            <div class="status status-neutral animate-ping status-lg"></div>
+            <div class="status status-neutral status-lg"></div>
         </div>
 
         <div class="flex gap-0">

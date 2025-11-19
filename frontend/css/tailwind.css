@@ -7,57 +7,38 @@
 }
 
 
+
 @plugin "daisyui/theme" {
-  name: "idaf-es";
+  name: "wastedpromax";
   default: true;
-  prefersdark: true ;
-  color-scheme: "light";
-
-  /* Base */
-  --color-base-100: oklch(98% 0.03 120);
-  --color-base-200: oklch(96% 0.06 121);
-  --color-base-300: oklch(92% 0.11 123);
-  --color-base-content: #000;
-
-  /* IDAF (verde institucional) */
-  --color-primary: #386427;
-  --color-primary-content: oklch(98% 0 0);
-
-  /* Espírito Santo (azul da bandeira) */
-  --color-secondary: #0054A6;
-  --color-secondary-content: oklch(98% 0 0);
-
-  /* Espírito Santo (rosa da faixa “Trabalha e Confia”) */
-  --color-accent: #E91E63;
-  --color-accent-content: oklch(98% 0 0);
-
-  /* Neutrais */
-  --color-neutral: oklch(45% 0.12 130);
-  --color-neutral-content: oklch(98% 0.03 120);
-
-  /* Info (inspirado no azul ES porém mais claro) */
-  --color-info: oklch(74% 0.15 230);
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: #e0f1d6;
+  --color-base-200: #c4e5b1;
+  --color-base-300: #9fd383;
+  --color-base-content: oklch(0% 0 0);
+  --color-primary: #7dbf5c;
+  --color-primary-content: oklch(0% 0 0);
+  --color-secondary: #5ea43e;
+  --color-secondary-content: oklch(0% 0 0);
+  --color-accent: #47822e;
+  --color-accent-content: oklch(100% 0 0);
+  --color-neutral: #386427;
+  --color-neutral-content: oklch(100% 0 0);
+  --color-info: oklch(62% 0.214 259.815);
   --color-info-content: oklch(100% 0 0);
-
-  /* Success (verde mais vibrante para distinguir do primary IDAF) */
-  --color-success: oklch(72% 0.22 150);
+  --color-success: oklch(72% 0.219 149.579);
   --color-success-content: oklch(100% 0 0);
-
-  /* Warning */
-  --color-warning: oklch(85% 0.2 92);
+  --color-warning: oklch(79% 0.184 86.047);
   --color-warning-content: oklch(100% 0 0);
-
-  /* Error (tom rosado porém distinto do accent rosa do ES) */
-  --color-error: oklch(57% 0.24 27);
+  --color-error: oklch(63% 0.237 25.331);
   --color-error-content: oklch(100% 0 0);
-
-  /* Raio e bordas */
   --radius-selector: 2rem;
   --radius-field: 2rem;
   --radius-box: 2rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 2px;
-  --depth: 0;
-  --noise: 1;
+  --size-selector: 0.21875rem;
+  --size-field: 0.21875rem;
+  --border: 0.5px;
+  --depth: 1;
+  --noise: 0;
 }
