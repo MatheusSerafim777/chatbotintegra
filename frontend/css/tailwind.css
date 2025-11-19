@@ -20,7 +20,7 @@
   --color-primary: #7dbf5c;
   --color-primary-content: oklch(0% 0 0);
   --color-secondary: #5ea43e;
-  --color-secondary-content: oklch(0% 0 0);
+  --color-secondary-content: oklch(100% 0 0);
   --color-accent: #47822e;
   --color-accent-content: oklch(100% 0 0);
   --color-neutral: #386427;

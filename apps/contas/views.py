@@ -1,6 +1,6 @@
 import json
 
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.views import View
@@ -10,6 +10,7 @@ from contas.forms import CadastroForm, SigninForm
 
 
 class LoginView(View):
+    template_name = 'Contas/Login'
     form_class = SigninForm
 
     def get(self, request: HttpRequest) -> InertiaResponse:
@@ -18,20 +19,25 @@ class LoginView(View):
         }
         return render(
             request,
-            'Contas/Login',
+            self.template_name,
             context,
         )
 
     def post(self, request: HttpRequest) -> InertiaResponse:
-        form = self.form_class(request, json.loads(request.body))
+        dados = json.loads(request.body)
+
+        form = self.form_class(request, dados)
 
         if not form.is_valid():
             context = {
                 'form': form,
             }
-            return render(request, 'Contas/Login', context)
+            return render(request, self.template_name, context)
 
         login(request, form.get_user())
+
+        if isinstance(dados, dict) and not dados.get('remember'):
+            request.session.set_expiry(0)
 
         return redirect('index')
 
@@ -47,14 +53,24 @@ class CadastroView(View):
         return render(request, self.template, context)
 
     def post(self, request: HttpRequest) -> InertiaResponse:
-        form = self.form_class(request.POST)
+        dados = json.loads(request.body)
 
+        form = self.form_class(dados)
         if not form.is_valid():
             context = {'form': form}
-            return render(request, 'partials/form.html', context)
+            return render(request, self.template, context)
 
         form.save()
 
         login(request, form.instance)
 
-        return render(request, self.template)
+        if isinstance(dados, dict) and not dados.get('remember'):
+            request.session.set_expiry(0)
+
+        return redirect('index')
+
+
+class SairView(View):
+    def post(self, request: HttpRequest):
+        logout(request)
+        return redirect('index')
