@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useTemplateRef, ref, Ref } from 'vue';
 import Mensagem from './Mensagem.vue';
 
 const mensagens = ref([
@@ -12,11 +12,6 @@ const mensagens = ref([
 
 const pergunta = ref('');
 const editable = ref<HTMLElement | null>(null);
-
-function handleInput(e: Event) {
-    const target = e.target as HTMLElement | null;
-    pergunta.value = target?.innerText ?? '';
-}
 
 const enviarMensagem = async () => {
     if (!pergunta.value.trim()) return;
@@ -63,7 +58,7 @@ const enviarMensagem = async () => {
 </script>
 
 <template>
-    <div class="max-w-3xl h-full max-h-[calc(100vh-6rem)] mx-auto flex flex-col justify-between gap-6">
+    <div class="max-w-3xl h-full pb-4 mx-auto flex flex-col justify-between gap-6">
         <div class="max-h-full overflow-x-auto overflow-y-visible p-2">
             <Mensagem v-for="(m, i) in mensagens" :key="i" :mensagem="m.mensagem" :tipo="m.tipo" />
         </div>
@@ -73,15 +68,16 @@ const enviarMensagem = async () => {
                 @click="editable?.focus()">
 
                 <!-- placeholder -->
-                <div ref="editable" id="pergunta" contenteditable="true" role="textbox" aria-multiline="true"
-                    class="w-full bg-transparent focus:outline-none p-0 font-medium min-h-6 whitespace-pre-wrap wrap-break-word"
-                    @input="handleInput"
-                    @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }">
-                </div>
-                <div ref="editable" id="pergunta" contenteditable="true" role="textbox" aria-multiline="true"
-                    class="w-full bg-transparent focus:outline-none p-0 font-medium min-h-6 whitespace-pre-wrap wrap-break-word"
-                    @input="pergunta = editable ? editable.innerText : ''"
-                    @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }">
+                <span v-if="!pergunta.trim()"
+                    class="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none select-none">
+                    Digite sua mensagem...
+                </span>
+                <div class="w-full max-h-60 overflow-scroll">
+                    <div ref="editable" id="pergunta" contenteditable="true" role="textbox" aria-multiline="true"
+                        class="w-full bg-transparent focus:outline-none p-0 font-medium min-h-6 whitespace-pre-wrap wrap-break-word"
+                        @input="pergunta = editable?.innerText ?? ''"
+                        @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }">
+                    </div>
                 </div>
 
                 <button class="btn btn-neutral text-neutral-content h-9 w-9 btn-circle p-0"
