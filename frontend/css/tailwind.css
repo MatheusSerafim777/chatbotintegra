@@ -2,38 +2,62 @@
 
 @plugin "daisyui";
 
+.teste {
+  color: #caddc2;
+}
+
 
 @plugin "daisyui/theme" {
-  name: "integrar";
+  name: "idaf-es";
   default: true;
-  prefersdark: true;
-  color-scheme: "dark";
-  --color-base-100: white;
-  --color-base-200: #386427;
-  --color-base-300: #386427;
-  --color-base-content: black;
-  --color-primary: oklch(60% 0.118 184.704);
-  --color-primary-content: oklch(98% 0.014 180.72);
-  --color-secondary: oklch(44% 0.017 285.786);
+  prefersdark: true ;
+  color-scheme: "light";
+
+  /* Base */
+  --color-base-100: oklch(98% 0.03 120);
+  --color-base-200: oklch(96% 0.06 121);
+  --color-base-300: oklch(92% 0.11 123);
+  --color-base-content: #000;
+
+  /* IDAF (verde institucional) */
+  --color-primary: #386427;
+  --color-primary-content: oklch(98% 0 0);
+
+  /* Espírito Santo (azul da bandeira) */
+  --color-secondary: #0054A6;
   --color-secondary-content: oklch(98% 0 0);
-  --color-accent: oklch(51% 0.262 276.966);
-  --color-accent-content: oklch(96% 0.018 272.314);
-  --color-neutral: oklch(26% 0.065 152.934);
-  --color-neutral-content: oklch(98% 0.018 155.826);
-  --color-info: oklch(78% 0.154 211.53);
-  --color-info-content: oklch(30% 0.056 229.695);
-  --color-success: oklch(77% 0.152 181.912);
-  --color-success-content: oklch(27% 0.046 192.524);
-  --color-warning: oklch(82% 0.189 84.429);
-  --color-warning-content: oklch(27% 0.077 45.635);
-  --color-error: oklch(71% 0.194 13.428);
-  --color-error-content: oklch(27% 0.105 12.094);
-  --radius-selector: 1rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.25rem;
+
+  /* Espírito Santo (rosa da faixa “Trabalha e Confia”) */
+  --color-accent: #E91E63;
+  --color-accent-content: oklch(98% 0 0);
+
+  /* Neutrais */
+  --color-neutral: oklch(45% 0.12 130);
+  --color-neutral-content: oklch(98% 0.03 120);
+
+  /* Info (inspirado no azul ES porém mais claro) */
+  --color-info: oklch(74% 0.15 230);
+  --color-info-content: oklch(100% 0 0);
+
+  /* Success (verde mais vibrante para distinguir do primary IDAF) */
+  --color-success: oklch(72% 0.22 150);
+  --color-success-content: oklch(100% 0 0);
+
+  /* Warning */
+  --color-warning: oklch(85% 0.2 92);
+  --color-warning-content: oklch(100% 0 0);
+
+  /* Error (tom rosado porém distinto do accent rosa do ES) */
+  --color-error: oklch(57% 0.24 27);
+  --color-error-content: oklch(100% 0 0);
+
+  /* Raio e bordas */
+  --radius-selector: 2rem;
+  --radius-field: 2rem;
+  --radius-box: 2rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 1;
+  --border: 2px;
+  --depth: 0;
   --noise: 1;
 }

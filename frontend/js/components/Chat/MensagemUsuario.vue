@@ -4,8 +4,8 @@ defineProps<{ mensagem: string }>();
 
 <template>
     <div class="flex flex-col items-end gap-2 group">
-        <div class="max-w-lg p-4 rounded-2xl bg-base-200">
-            {{ mensagem }}
+        <div class="max-w-lg px-4 py-1.5 rounded-[18px] bg-neutral text-neutral-content">
+            <p>{{ mensagem }}</p>
         </div>
         <div
             class="flex gap-0 opacity-0 pointer-events-none transition group-hover:opacity-100 group-hover:pointer-events-auto">
