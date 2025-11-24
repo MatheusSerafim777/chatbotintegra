@@ -1,6 +1,8 @@
-<script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+<script setup>
+import { Link, usePage } from '@inertiajs/vue3';
 import IntegracarLogo from './IntegracarLogo.vue';
+
+const page = usePage();
 </script>
 
 <template>
@@ -54,10 +56,10 @@ import IntegracarLogo from './IntegracarLogo.vue';
                              role="button">
                             <div tabindex="0" role="button" class="btn btn-accent w-full">
                                 <i class="bi bi-person-circle"></i>
-                                <span class="is-drawer-close:hidden">Lucas Zanotelli</span>
+                                <span class="is-drawer-close:hidden">{{ page.props.user.name }}</span>
                             </div>
                             <ul tabindex="-1"
-                                class="dropdown-content menu bg-base-300 text-base-content rounded-box z-1 w-52 p-2 shadow-sm ">
+                                class="dropdown-content menu bg-base-300 text-base-content rounded-box z-1 w-64 p-2 shadow-sm ">
                                 <li>
                                     <Link href="/contas/sair/" method="post">
                                     <i class="bi bi-box-arrow-right text-error"> </i>
