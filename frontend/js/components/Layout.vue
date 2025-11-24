@@ -13,7 +13,8 @@ import IntegracarLogo from './IntegracarLogo.vue';
                     <i class="bi bi-layout-sidebar text-xl"></i>
                 </label>
                 <div class="px-4">
-                    <Link href="/" class="flex items-center gap-2"><IntegracarLogo/> Chatbot IntegraCAR </Link>
+                    <Link href="/" class="flex items-center gap-2">
+                    <IntegracarLogo /> Chatbot IntegraCAR </Link>
                 </div>
             </nav>
 
@@ -47,6 +48,27 @@ import IntegracarLogo from './IntegracarLogo.vue';
                         </button>
                     </li>
                 </ul>
+                <ul class="menu w-full">
+                    <li>
+                        <div class="dropdown dropdown-top  is-drawer-close:dropdown-start dropdown-center p-0 is-drawer-close:tooltip is-drawer-close:tooltip-right"
+                             role="button">
+                            <div tabindex="0" role="button" class="btn btn-accent w-full">
+                                <i class="bi bi-person-circle"></i>
+                                <span class="is-drawer-close:hidden">Lucas Zanotelli</span>
+                            </div>
+                            <ul tabindex="-1"
+                                class="dropdown-content menu bg-base-300 text-base-content rounded-box z-1 w-52 p-2 shadow-sm ">
+                                <li>
+                                    <Link href="/contas/sair/" method="post">
+                                    <i class="bi bi-box-arrow-right text-error"> </i>
+                                    Sair
+                                    </Link>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+
             </div>
         </div>
     </div>
