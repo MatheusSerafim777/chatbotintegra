@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useTemplateRef, ref, Ref } from 'vue';
+import { ref } from 'vue';
 import Mensagem from './Mensagem.vue';
 
 const mensagens = ref([
