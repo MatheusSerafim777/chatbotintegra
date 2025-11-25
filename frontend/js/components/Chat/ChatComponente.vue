@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 import Mensagem from './Mensagem.vue';
+
 
 const mensagens = ref([
     { tipo: 'usuario', mensagem: 'Olá, como posso ajudar?' },
@@ -20,24 +21,29 @@ const mensagens = ref([
 
 const pergunta = ref('');
 const editable = ref<HTMLElement | null>(null);
+const containerMensagens = ref<HTMLElement | null>(null);
+
 
 const enviarMensagem = async () => {
     if (!pergunta.value.trim()) return;
 
-    mensagens.value.push({
+    const mensagemUsuario = {
         tipo: 'usuario',
         mensagem: pergunta.value
-    });
+    };
+
+    await adicionarMensagem(mensagemUsuario);
+
 
     const lastUserMessage = pergunta.value;
     pergunta.value = '';
     if (editable.value) {
-        editable.value.innerText = '';
+        editable.value.textContent = '';
     }
-
+      
     // mensagem vazia do bot
     const botMessage = { tipo: 'bot', mensagem: '' };
-    mensagens.value.push(botMessage);
+    await adicionarMensagem(botMessage);
 
     // Agora começa o streaming
     const response = await fetch('/api/chat', {
@@ -59,15 +65,39 @@ const enviarMensagem = async () => {
     while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        mensagens.value[index].mensagem += decoder.decode(value);
+        mensagens.value[index].mensagem += decoder.decode(value); //input de escrita
+        scrollParaUltimaMensagem();
+    };
+}
+
+
+async function adicionarMensagem(botMessage: {tipo: string, mensagem: string}) {
+    mensagens.value.push(botMessage);
+    await nextTick();             
+    scrollParaUltimaMensagem();
+}
+
+function handlePaste(e: ClipboardEvent) {
+    e.preventDefault()
+    const text = e.clipboardData?.getData('text/plain') || ''
+    document.execCommand('insertText', false, text)
+}
+
+function scrollParaUltimaMensagem() {
+    const div = containerMensagens.value
+    if(div){
+        div.scrollTo({
+            top: div.scrollHeight,
+            behavior: 'smooth',
+        })
     }
-};
+}
 
 </script>
 
 <template>
     <div class="h-full pb-4 mx-auto flex flex-col justify-between gap-6">
-        <div class="overflow-auto max-h-[81vh]">
+        <div class="overflow-auto max-h-[81vh]" ref="containerMensagens"> 
             <div class="w-full max-w-3xl mx-auto py-2">
                 <Mensagem v-for="(m, i) in mensagens" :key="i" :mensagem="m.mensagem" :tipo="m.tipo" />
             </div>
@@ -86,7 +116,8 @@ const enviarMensagem = async () => {
                     <div ref="editable" id="pergunta" contenteditable="true" role="textbox" aria-multiline="true"
                         class="w-full bg-transparent focus:outline-none p-0 font-medium min-h-6 whitespace-pre-wrap wrap-break-word"
                         @input="pergunta = editable?.innerText ?? ''"
-                        @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }">
+                        @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }"
+                        @paste="handlePaste" >
                     </div>
                 </div>
 
