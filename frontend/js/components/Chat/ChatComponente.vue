@@ -7,6 +7,14 @@ const mensagens = ref([
     { tipo: 'bot', mensagem: 'Olá! Em que posso ajudar você hoje?' },
     { tipo: 'usuario', mensagem: 'Quais são os seus horários de atendimento?' },
     { tipo: 'bot', mensagem: 'Nosso horário de atendimento é de segunda a sexta, das 9h às 18h.' },
+    { tipo: 'usuario', mensagem: 'Olá, como posso ajudar?' },
+    { tipo: 'bot', mensagem: 'Olá! Em que posso ajudar você hoje?' },
+    { tipo: 'usuario', mensagem: 'Quais são os seus horários de atendimento?' },
+    { tipo: 'bot', mensagem: 'Nosso horário de atendimento é de segunda a sexta, das 9h às 18h.' },
+    { tipo: 'usuario', mensagem: 'Olá, como posso ajudar?' },
+    { tipo: 'bot', mensagem: 'Olá! Em que posso ajudar você hoje?' },
+    { tipo: 'usuario', mensagem: 'Quais são os seus horários de atendimento?' },
+    { tipo: 'bot', mensagem: 'Nosso horário de atendimento é de segunda a sexta, das 9h às 18h.' },
 ]);
 
 
@@ -58,11 +66,13 @@ const enviarMensagem = async () => {
 </script>
 
 <template>
-    <div class="max-w-3xl h-full pb-4 mx-auto flex flex-col justify-between gap-6">
-        <div class="max-h-full overflow-x-auto overflow-y-visible p-2">
-            <Mensagem v-for="(m, i) in mensagens" :key="i" :mensagem="m.mensagem" :tipo="m.tipo" />
+    <div class="h-full pb-4 mx-auto flex flex-col justify-between gap-6">
+        <div class="overflow-auto max-h-[81vh]">
+            <div class="w-full max-w-3xl mx-auto py-2">
+                <Mensagem v-for="(m, i) in mensagens" :key="i" :mensagem="m.mensagem" :tipo="m.tipo" />
+            </div>
         </div>
-        <form @submit.prevent="enviarMensagem">
+        <form @submit.prevent="enviarMensagem" class="w-full max-w-3xl mx-auto">
             <label for="pergunta"
                 class="relative flex justify-between items-center gap-4 min-h-14 rounded-[28px] bg-base-300 text-base-content shadow-2xl shadow-base-300 p-2.5 cursor-text"
                 @click="editable?.focus()">

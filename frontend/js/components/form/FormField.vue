@@ -13,11 +13,9 @@ const hasIcon = !!props.field.widget_attrs.icon;
 </script>
 
 <template>
-    <!-- Hidden -->
     <input v-if="field.hidden" type="hidden" :name="field.name" :value="field.value" />
 
     <div v-else class="form-control w-full">
-        <!-- Label -->
         <label class="label" :for="field.id_for_label">
             <span class="label-text font-medium">{{ field.label }}</span>
             <span v-if="field.required" class="text-error">*</span>
@@ -26,16 +24,14 @@ const hasIcon = !!props.field.widget_attrs.icon;
             </div>
         </label>
 
-        <!-- Inputs -->
         <InputWithIcon v-if="hasIcon" :field="field" />
 
         <TextareaField v-else-if="isTextarea" :field="field" />
 
         <InputBase v-else :field="field" />
 
-        <!-- Field Errors -->
         <label class="label text-error" v-if="field.errors.length">
-            <span class="label-text-alt" v-for="(error, i) in field.errors" :key="i">
+            <span class="label-text-alt whitespace-pre-wrap wrap-break-word" v-for="(error, i) in field.errors" :key="i">
                 {{ error }}
             </span>
         </label>

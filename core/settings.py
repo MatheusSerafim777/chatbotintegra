@@ -43,8 +43,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    # Third party apps
     'django_vite',
     'inertia',
+    'django_q',
+    # Local apps
     'contas',
     'chat',
 ]
@@ -147,8 +150,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-# Name of static files folder (after called python manage.py collectstatic)
 STATIC_ROOT = BASE_DIR / 'static'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # If use HMR or not.
 DJANGO_VITE = {
@@ -189,3 +194,12 @@ WHITENOISE_IMMUTABLE_FILE_TEST = immutable_file_test
 
 
 OPENAI_API_KEY = env.str('OPENAI_API_KEY', default='')
+
+Q_CLUSTER = {
+    'name': 'chatbot-integracar',
+    'workers': 1,
+    'timeout': 100,
+    'retry': 120,
+    'queue_limit': 50,
+    'orm': 'default',
+}

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Form } from '@inertiajs/vue3';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage, Form } from '@inertiajs/vue3';
 
 import type { DjangoFormData } from "@/types/djangoForm";
 import LayoutAnonimo from '@/components/LayoutAnonimo.vue';
@@ -8,7 +7,10 @@ import LayoutAnonimo from '@/components/LayoutAnonimo.vue';
 import DjangoForm from '@/components/form/DjangoForm.vue'
 
 defineProps<{ form: DjangoFormData }>();
+
+const page = usePage();
 </script>
+
 
 <template>
     <LayoutAnonimo>
@@ -24,7 +26,7 @@ defineProps<{ form: DjangoFormData }>();
                         </div>
                     </div>
                 </div>
-                <Form action="/contas/cadastro/" method="post" class="card-body gap-4">
+                <Form :action="page.props.urls['cadastrar']" method="post" class="card-body gap-4">
                     <p class="text-xs opacity-60">Faça seu cadastro</p>
 
                     <DjangoForm :form="form" />
@@ -34,10 +36,10 @@ defineProps<{ form: DjangoFormData }>();
                         <input name="remember" type="checkbox" class="toggle toggle-xs" checked>
                         Lembrar de mim
                     </label>
-                    
+
                     <div class="card-actions flex flex-col items-center justify-center gap-6">
                         <button class="btn btn-neutral">Cadastrar</button>
-                        <Link href="/contas/login/">Ja tem conta? Entrar</Link>
+                        <Link :href="page.props.urls['entrar']">Ja tem conta? Entrar</Link>
                     </div>
                 </Form>
 

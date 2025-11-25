@@ -1,5 +1,7 @@
+import json
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest
+from django.urls import get_resolver
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -17,9 +19,10 @@ class IndexView(View):
 
 @method_decorator(login_required, name='dispatch')
 class DocumentosView(View):
-    template_name = 'ia/documentos.html'
+    template_name = 'Chat/Documentos'
+    form_class = ImportarDocumentosForm
 
-    def get(self, request: HttpRequest):
+    def get(self, request: HttpRequest, extra_context=None):
         documentos = Documento.objects.all()
 
         documentos_processados = documentos.filter(
@@ -38,20 +41,15 @@ class DocumentosView(View):
             'documentos': documentos,
             'documentos_processados': documentos_processados,
             'documentos_pendentes': documentos_pendentes,
-        }
+        } | (extra_context or {})
         return render(request, self.template_name, context)
 
 
-@method_decorator(login_required, name='dispatch')
-class ImportarDocumentosView(View):
-    form_class = ImportarDocumentosForm
-
     def post(self, request: HttpRequest):
-        form = self.form_class(request.POST, request.FILES)
+        form = self.form_class({}, request.FILES)
         if not form.is_valid():
-            context = {'form': form}
-            return render(request, 'components/form.html', context)
+            return self.get(request, {'importar_documentos_form': form})
 
         form.save()
 
-        # return HttpResponseClientRefresh()
+        return self.get(request)

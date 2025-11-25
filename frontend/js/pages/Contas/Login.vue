@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { Form } from '@inertiajs/vue3';
-import { Link } from '@inertiajs/vue3';
+import { Form, Link, usePage } from '@inertiajs/vue3';
 import type { DjangoFormData } from "@/types/djangoForm";
 import LayoutAnonimo from '@/components/LayoutAnonimo.vue';
 
 import DjangoForm from '@/components/form/DjangoForm.vue'
 
 defineProps<{ form: DjangoFormData }>();
+
+const page = usePage();
 </script>
 
 <template>
@@ -25,7 +26,7 @@ defineProps<{ form: DjangoFormData }>();
                             </div>
                         </div>
                     </div>
-                    <Form action="/contas/login/" method="post" class="card-body gap-4">
+                    <Form :action="page.props.urls['entrar']" method="post" class="card-body gap-4">
                         <p class="text-xs opacity-60">Digite suas credenciais para acessar sua conta</p>
 
                         <DjangoForm :form="form" />
@@ -36,7 +37,7 @@ defineProps<{ form: DjangoFormData }>();
                         </label>
                         <div class="card-actions flex items-center justify-center gap-6 flex-col">
                             <button class="btn btn-neutral">Entrar</button>
-                            <Link href="/contas/cadastro/">Não tem conta? Cadastrar</Link>
+                            <Link :href="page.props.urls['cadastrar']">Não tem conta? Cadastrar</Link>
                         </div>
                     </Form>
                 </div>

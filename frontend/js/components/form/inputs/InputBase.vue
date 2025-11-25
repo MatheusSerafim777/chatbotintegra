@@ -4,7 +4,12 @@ defineProps<{ field: FormField }>();
 </script>
 
 <template>
-    <input class="input input-bordered w-full" :class="{ 'input-error': field.errors.length }"
-        :type="field.input_type || 'text'" :id="field.id_for_label" :name="field.name" :value="field.value"
+    <input :class="[
+        field.input_type !== 'file' && 'input',
+        'w-full',
+        field.errors.length && 'input-error',
+        field.input_type === 'file' && 'file-input'
+    ]" :type="field.input_type || 'text'" :id="field.id_for_label" :name="field.name" :value="field.value"
         :disabled="field.disabled" v-bind="field.widget_attrs" />
+
 </template>

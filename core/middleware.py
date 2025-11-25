@@ -2,12 +2,26 @@ import sys
 
 from django.contrib.messages import get_messages
 from django.http import HttpRequest
+from django.urls import get_resolver
 from inertia import share
 
 
 class DataShareMiddleware(object):
     def __init__(self, get_response):
         self.get_response = get_response
+
+    def get_urls(self) -> dict[str, str]:
+        urls = {}
+        resolver = get_resolver()
+        for name, route in resolver.reverse_dict.items():
+            if not isinstance(name, str):
+                continue
+            pattern = route[0][0]
+
+            url = pattern[0]
+
+            urls[name] = '/' + url
+        return urls
 
     def __call__(self, request: HttpRequest):
         messages = []
@@ -27,6 +41,11 @@ class DataShareMiddleware(object):
             user=lambda: request.user
             if request.user.is_authenticated
             else None,
+        )
+
+        share(
+            request,
+            urls=lambda: self.get_urls(),
         )
 
         response = self.get_response(request)
