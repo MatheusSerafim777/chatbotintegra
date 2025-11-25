@@ -2,22 +2,14 @@
 import { ref, nextTick } from 'vue';
 import Mensagem from './Mensagem.vue';
 
+type Mensagem = {
+    tipo: 'usuario' | 'bot',
+    mensagem: string;
+}
 
-const mensagens = ref([
-    { tipo: 'usuario', mensagem: 'Olá, como posso ajudar?' },
-    { tipo: 'bot', mensagem: 'Olá! Em que posso ajudar você hoje?' },
-    { tipo: 'usuario', mensagem: 'Quais são os seus horários de atendimento?' },
-    { tipo: 'bot', mensagem: 'Nosso horário de atendimento é de segunda a sexta, das 9h às 18h.' },
-    { tipo: 'usuario', mensagem: 'Olá, como posso ajudar?' },
-    { tipo: 'bot', mensagem: 'Olá! Em que posso ajudar você hoje?' },
-    { tipo: 'usuario', mensagem: 'Quais são os seus horários de atendimento?' },
-    { tipo: 'bot', mensagem: 'Nosso horário de atendimento é de segunda a sexta, das 9h às 18h.' },
-    { tipo: 'usuario', mensagem: 'Olá, como posso ajudar?' },
-    { tipo: 'bot', mensagem: 'Olá! Em que posso ajudar você hoje?' },
-    { tipo: 'usuario', mensagem: 'Quais são os seus horários de atendimento?' },
-    { tipo: 'bot', mensagem: 'Nosso horário de atendimento é de segunda a sexta, das 9h às 18h.' },
+const mensagens = ref<Mensagem[]>([
+    { tipo: 'bot', mensagem: 'Olá! Como posso ajudar você hoje?' },
 ]);
-
 
 const pergunta = ref('');
 const editable = ref<HTMLElement | null>(null);
@@ -27,7 +19,7 @@ const containerMensagens = ref<HTMLElement | null>(null);
 const enviarMensagem = async () => {
     if (!pergunta.value.trim()) return;
 
-    const mensagemUsuario = {
+    const mensagemUsuario: Mensagem = {
         tipo: 'usuario',
         mensagem: pergunta.value
     };
@@ -42,7 +34,7 @@ const enviarMensagem = async () => {
     }
       
     // mensagem vazia do bot
-    const botMessage = { tipo: 'bot', mensagem: '' };
+    const botMessage: Mensagem = { tipo: 'bot', mensagem: '' };
     await adicionarMensagem(botMessage);
 
     // Agora começa o streaming
@@ -71,7 +63,7 @@ const enviarMensagem = async () => {
 }
 
 
-async function adicionarMensagem(botMessage: {tipo: string, mensagem: string}) {
+async function adicionarMensagem(botMessage: Mensagem) {
     mensagens.value.push(botMessage);
     await nextTick();             
     scrollParaUltimaMensagem();
