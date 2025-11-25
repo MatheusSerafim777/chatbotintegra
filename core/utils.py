@@ -1,3 +1,4 @@
+from django.db.models.fields.files import FieldFile
 from django.forms import BaseModelForm, Form, ModelForm
 from inertia.utils import InertiaJsonEncoder
 
@@ -42,8 +43,18 @@ class CustomJsonEncoder(InertiaJsonEncoder):
             'is_valid': form.is_bound and form.is_valid(),
         }
 
+    def _file_field_encoder(self, field: FieldFile):
+        if not field:
+            return None
+        return {
+            'name': field.name,
+            'url': field.url,
+        }
+
     def default(self, obj):
         if isinstance(obj, (ModelForm, Form)):
             return self._form_encoder(obj)
+        if isinstance(obj, FieldFile):
+            return self._file_field_encoder(obj)
 
         return super().default(obj)

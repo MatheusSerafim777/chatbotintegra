@@ -45,7 +45,7 @@ class DataShareMiddleware(object):
 
         share(
             request,
-            urls=lambda: self.get_urls(),
+            urls=self.get_urls,
         )
 
         response = self.get_response(request)

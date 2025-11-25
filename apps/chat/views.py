@@ -1,7 +1,6 @@
-import json
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest
-from django.urls import get_resolver
+from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -44,7 +43,6 @@ class DocumentosView(View):
         } | (extra_context or {})
         return render(request, self.template_name, context)
 
-
     def post(self, request: HttpRequest):
         form = self.form_class({}, request.FILES)
         if not form.is_valid():
@@ -52,4 +50,4 @@ class DocumentosView(View):
 
         form.save()
 
-        return self.get(request)
+        return redirect('documentos')
