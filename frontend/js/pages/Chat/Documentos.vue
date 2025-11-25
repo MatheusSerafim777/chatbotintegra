@@ -8,7 +8,7 @@ import DjangoForm from '@/components/form/DjangoForm.vue'
 
 
 const page = usePage();
-defineProps<{
+const props = defineProps<{
     importar_documentos_form: DjangoFormData,
     documentos: Documento[];
     documentos_processados: number;
@@ -46,6 +46,7 @@ defineProps<{
                         <tr>
                             <th>ID</th>
                             <th>Documento</th>
+                            <th>Status</th>
                             <th class="w-0 whitespace-nowrap">Ações</th>
                         </tr>
                     </thead>
@@ -54,11 +55,15 @@ defineProps<{
                         <tr v-for="documento in documentos" :key="documento.id">
                             <td>{{ documento.id }}</td>
                             <td>{{ documento.nome }}</td>
+                            <td>{{documento.status}}</td>
                             <td class="w-0 whitespace-nowrap">
                                 <div class="flex gap-2 justify-center">
                                     <a :href="documento.arquivo.url" target="_blank">
-                                        <i class="bi bi-eye-fill"></i>
+                                        <i class="bi bi-eye-fill text-neutral"></i>
                                     </a>
+                                    <Link :href="page.props['urls']['excluir_documento'].replace('%(id)s', documento.id)" method="post">
+                                        <i class="bi bi-trash3-fill text-error"></i>
+                                    </Link>
                                 </div>
                             </td>
                         </tr>

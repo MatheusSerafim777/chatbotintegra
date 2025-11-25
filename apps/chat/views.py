@@ -1,6 +1,7 @@
+from tracemalloc import get_object_traceback
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -50,4 +51,10 @@ class DocumentosView(View):
 
         form.save()
 
+        return redirect('documentos')
+    
+class ExcluirDocumentoView(View):
+    def post(self, request:HttpRequest, id:int):
+        documento = get_object_or_404(Documento, id=id)
+        documento.delete()
         return redirect('documentos')

@@ -5,4 +5,5 @@ from chat import views
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
     path('documentos/', views.DocumentosView.as_view(), name='documentos'),
+    path('documentos/<int:id>/excluir/', views.ExcluirDocumentoView.as_view(), name='excluir_documento'),
 ]
