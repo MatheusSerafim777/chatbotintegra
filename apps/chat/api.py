@@ -1,6 +1,9 @@
+from xml.dom.minidom import Document
 from django.http import StreamingHttpResponse
+from django.shortcuts import get_object_or_404
 from ninja import Router
 
+from chat.models import Documento
 from chat.rag import Rag
 from chat.schemas import ChatSchema
 
@@ -22,3 +25,12 @@ def chat_endpoint(request, payload: ChatSchema):
         return 200, {'resposta': resposta}
 
     return StreamingHttpResponse(resposta)
+
+@chat_router.get('/documentos/{id}/status')
+def status_documento(request, id):
+    documento = get_object_or_404(Documento, id=id)
+    print(documento.status)
+    return {'status': documento.status}
+
+    
+    
