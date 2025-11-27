@@ -1,5 +1,12 @@
 <script setup lang="ts">
-defineProps<{ mensagem: string }>();
+import { Mensagem } from './ChatComponente.vue';
+
+defineProps<{
+    mensagem: Mensagem,
+    indexMensagemSelecionada: number;
+    maxMensagemSelecionada: number;
+    setIndexMensagemSelecionada: (index: number) => void;
+}>();
 
 function escapeHtml(str: string): string {
     return str
@@ -17,7 +24,7 @@ function escapeHtml(str: string): string {
     <div class="flex flex-col items-end gap-2 group">
         <div
             class="max-w-lg px-4 py-1.5 rounded-[18px] bg-neutral text-neutral-content whitespace-pre-wrap wrap-break-word">
-            <p v-html="escapeHtml(mensagem)"></p>
+            <p v-html="escapeHtml(mensagem.conteudo)"></p>
         </div>
         <div
             class="flex gap-0 opacity-0 pointer-events-none transition group-hover:opacity-100 group-hover:pointer-events-auto">
@@ -27,12 +34,15 @@ function escapeHtml(str: string): string {
             <button class="btn btn-ghost btn-xs btn-square">
                 <i class="bi bi-pencil text-base"></i>
             </button>
-            <div class="flex items-center gap-0.5">
-                <button class="btn btn-ghost btn-xs btn-square">
+            <div class="flex items-center gap-0.5" v-if="maxMensagemSelecionada > 0">
+                <button class="btn btn-ghost btn-xs btn-square" :disabled="indexMensagemSelecionada <= 0"
+                    @click="setIndexMensagemSelecionada(indexMensagemSelecionada - 1)">
                     <i class="bi bi-caret-left text-base"></i>
                 </button>
-                <span class="text-sm h-fit">1/2</span>
-                <button class="btn btn-ghost btn-xs btn-square">
+                <span class="text-sm h-fit">{{ indexMensagemSelecionada + 1 }}/{{ maxMensagemSelecionada + 1 }}</span>
+                <button class="btn btn-ghost btn-xs btn-square"
+                    @click="setIndexMensagemSelecionada(indexMensagemSelecionada + 1)"
+                    :disabled="indexMensagemSelecionada >= maxMensagemSelecionada">
                     <i class="bi bi-caret-right text-base"></i>
                 </button>
             </div>

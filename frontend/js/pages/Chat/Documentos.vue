@@ -5,6 +5,7 @@ import Layout from '@/components/Layout.vue';
 import type { DjangoFormData } from "@/types/djangoForm";
 import type { Documento } from '@/types/index';
 import DjangoForm from '@/components/form/DjangoForm.vue'
+import { ref } from 'vue';
 
 
 const page = usePage();
@@ -14,6 +15,8 @@ const props = defineProps<{
     documentos_processados: number;
     documentos_pendentes: number;
 }>();
+
+const documentos = ref<Documento[]>(props.documentos);
 
 </script>
 

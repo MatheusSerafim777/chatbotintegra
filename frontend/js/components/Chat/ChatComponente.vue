@@ -2,14 +2,30 @@
 import { ref, nextTick } from 'vue';
 import Mensagem from './Mensagem.vue';
 
-type Mensagem = {
+export type Mensagem = {
+    id: string;
     tipo: 'usuario' | 'bot',
-    mensagem: string;
+    conteudo: string;
+    mensagemPai: string | null;
+    mensagensFilhas: string[];
+    curtido: boolean | null;
 }
 
-const mensagens = ref<Mensagem[]>([
-    { tipo: 'bot', mensagem: 'Olá! Como posso ajudar você hoje?' },
-]);
+export type MapMensagens = {
+    [key: string]: Mensagem;
+}
+
+const mapMensagens = ref<MapMensagens>({
+    '1': { id: '1', tipo: 'bot', conteudo: 'Olá! Como posso ajudar você hoje?', mensagemPai: null, mensagensFilhas: ['2', '3'], curtido: null },
+    '2': { id: '2', tipo: 'usuario', conteudo: 'Oi! Oque é CAR?', mensagemPai: '1', mensagensFilhas: [], curtido: null },
+    '3': { id: '3', tipo: 'usuario', conteudo: 'Preciso de ajuda com meu processo.', mensagemPai: '1', mensagensFilhas: ['6', '7'], curtido: null },
+    '4': { id: '4', tipo: 'bot', conteudo: 'Olá! Precisa de ajuda?', mensagemPai: null, mensagensFilhas: ['5'], curtido: null },
+    '5': { id: '5', tipo: 'usuario', conteudo: 'Sim, por favor.', mensagemPai: '4', mensagensFilhas: [], curtido: null },
+    '6': { id: '6', tipo: 'bot', conteudo: 'Claro! Com o que você precisa de ajuda?', mensagemPai: '3', mensagensFilhas: [], curtido: null },
+    '7': { id: '7', tipo: 'bot', conteudo: 'Estou aqui para ajudar com seu processo.', mensagemPai: '3', mensagensFilhas: [], curtido: null },
+});
+
+const mensagensRaiz = ref<string[]>(['1', '4']);
 
 const pergunta = ref('');
 const editable = ref<HTMLElement | null>(null);
@@ -32,7 +48,7 @@ const enviarMensagem = async () => {
     if (editable.value) {
         editable.value.textContent = '';
     }
-      
+
     // mensagem vazia do bot
     const botMessage: Mensagem = { tipo: 'bot', mensagem: '' };
     await adicionarMensagem(botMessage);
@@ -53,19 +69,19 @@ const enviarMensagem = async () => {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
 
-    const index = mensagens.value.length - 1;
+    const index = mapMensagens.value.length - 1;
     while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        mensagens.value[index].mensagem += decoder.decode(value); //input de escrita
+        mapMensagens.value[index].mensagem += decoder.decode(value); //input de escrita
         scrollParaUltimaMensagem();
     };
 }
 
 
 async function adicionarMensagem(botMessage: Mensagem) {
-    mensagens.value.push(botMessage);
-    await nextTick();             
+    mapMensagens.value.push(botMessage);
+    await nextTick();
     scrollParaUltimaMensagem();
 }
 
@@ -77,21 +93,21 @@ function handlePaste(e: ClipboardEvent) {
 
 function scrollParaUltimaMensagem() {
     const div = containerMensagens.value
-    if(div){
+    if (div) {
         div.scrollTo({
             top: div.scrollHeight,
             behavior: 'smooth',
         })
     }
 }
-
+ 
 </script>
 
 <template>
     <div class="h-full pb-4 mx-auto flex flex-col justify-between gap-6">
-        <div class="overflow-auto max-h-[81vh]" ref="containerMensagens"> 
+        <div class="overflow-auto max-h-[81vh]" ref="containerMensagens">
             <div class="w-full max-w-3xl mx-auto py-2">
-                <Mensagem v-for="(m, i) in mensagens" :key="i" :mensagem="m.mensagem" :tipo="m.tipo" />
+                <Mensagem :map-mensagens="mapMensagens" :ids="mensagensRaiz" />
             </div>
         </div>
         <form @submit.prevent="enviarMensagem" class="w-full max-w-3xl mx-auto">
@@ -109,7 +125,7 @@ function scrollParaUltimaMensagem() {
                         class="w-full bg-transparent focus:outline-none p-0 font-medium min-h-6 whitespace-pre-wrap wrap-break-word"
                         @input="pergunta = editable?.innerText ?? ''"
                         @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }"
-                        @paste="handlePaste" >
+                        @paste="handlePaste">
                     </div>
                 </div>
 

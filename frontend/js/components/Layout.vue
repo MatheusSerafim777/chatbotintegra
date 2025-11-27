@@ -10,7 +10,7 @@ const page = usePage();
         <input id="sidebar" type="checkbox" class="drawer-toggle" checked />
         <div class="drawer-content flex flex-col min-h-screen">
             <!-- Navbar -->
-            <nav class="navbar w-full sticky top-0 z-20 bg-neutral text-neutral-content">
+            <nav class="navbar w-full sticky top-0 z-20 bg-secondary text-secondary-content">
                 <label for="sidebar" aria-label="open sidebar" class="btn btn-square btn-ghost">
                     <i class="bi bi-layout-sidebar text-xl"></i>
                 </label>
@@ -37,15 +37,15 @@ const page = usePage();
                 <ul class="menu w-full grow">
                     <div class="h-14"></div>
                     <li>
-                        <Link :href="page.props.urls['index']" class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-                            data-tip="Nova Conversa">
+                        <Link :href="page.props.urls['index']"
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Nova Conversa">
                         <i class="bi bi-pencil-square"></i>
                         <span class="is-drawer-close:hidden">Nova Conversa</span>
                         </Link>
                     </li>
                     <li>
-                        <Link :href="page.props.urls['documentos']" class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-                            data-tip="Documentos">
+                        <Link :href="page.props.urls['documentos']"
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Documentos">
                         <i class="bi bi-file-earmark-text"></i>
                         <span class="is-drawer-close:hidden">Documentos</span>
                         </Link>
