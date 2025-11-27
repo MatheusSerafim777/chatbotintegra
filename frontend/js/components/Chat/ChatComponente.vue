@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, computed } from 'vue';
 import Mensagem from './Mensagem.vue';
 
 export type Mensagem = {
-    id: string;
+    id: number;
     tipo: 'usuario' | 'bot',
     conteudo: string;
-    mensagemPai: string | null;
-    mensagensFilhas: string[];
+    mensagemPai: number | null;
+    mensagensFilhas: number[];
     curtido: boolean | null;
 }
 
 export type MapMensagens = {
-    [key: string]: Mensagem;
+    [key: number]: Mensagem;
 }
 
 const mapMensagens = ref<MapMensagens>({
-    '1': { id: '1', tipo: 'bot', conteudo: 'Olá! Como posso ajudar você hoje?', mensagemPai: null, mensagensFilhas: ['2', '3'], curtido: null },
-    '2': { id: '2', tipo: 'usuario', conteudo: 'Oi! Oque é CAR?', mensagemPai: '1', mensagensFilhas: [], curtido: null },
-    '3': { id: '3', tipo: 'usuario', conteudo: 'Preciso de ajuda com meu processo.', mensagemPai: '1', mensagensFilhas: ['6', '7'], curtido: null },
-    '4': { id: '4', tipo: 'bot', conteudo: 'Olá! Precisa de ajuda?', mensagemPai: null, mensagensFilhas: ['5'], curtido: null },
-    '5': { id: '5', tipo: 'usuario', conteudo: 'Sim, por favor.', mensagemPai: '4', mensagensFilhas: [], curtido: null },
-    '6': { id: '6', tipo: 'bot', conteudo: 'Claro! Com o que você precisa de ajuda?', mensagemPai: '3', mensagensFilhas: [], curtido: null },
-    '7': { id: '7', tipo: 'bot', conteudo: 'Estou aqui para ajudar com seu processo.', mensagemPai: '3', mensagensFilhas: [], curtido: null },
+    1: { id: 1, tipo: 'bot', conteudo: 'Olá! Como posso ajudar você hoje?', mensagemPai: null, mensagensFilhas: [2, 3], curtido: null },
+    2: { id: 2, tipo: 'usuario', conteudo: 'Oi! Oque é CAR?', mensagemPai: 1, mensagensFilhas: [], curtido: null },
+    3: { id: 3, tipo: 'usuario', conteudo: 'Preciso de ajuda com meu processo.', mensagemPai: 1, mensagensFilhas: [6, 7], curtido: null },
+    4: { id: 4, tipo: 'bot', conteudo: 'Olá! Precisa de ajuda?', mensagemPai: null, mensagensFilhas: [5], curtido: null },
+    5: { id: 5, tipo: 'usuario', conteudo: 'Sim, por favor.', mensagemPai: 4, mensagensFilhas: [], curtido: null },
+    6: { id: 6, tipo: 'bot', conteudo: 'Claro! Com o que você precisa de ajuda?', mensagemPai: 3, mensagensFilhas: [], curtido: null },
+    7: { id: 7, tipo: 'bot', conteudo: 'Estou aqui para ajudar com seu processo.', mensagemPai: 3, mensagensFilhas: [], curtido: null },
 });
 
-const mensagensRaiz = ref<string[]>(['1', '4']);
+const mensagensRaiz = computed<number[]>(() => Object.values(mapMensagens.value).filter(mensagem => mensagem.mensagemPai === null).map(mensagem => mensagem.id!));
 
 const pergunta = ref('');
 const editable = ref<HTMLElement | null>(null);
@@ -36,8 +36,12 @@ const enviarMensagem = async () => {
     if (!pergunta.value.trim()) return;
 
     const mensagemUsuario: Mensagem = {
+        id: Date.now() + Math.random(),
         tipo: 'usuario',
-        mensagem: pergunta.value
+        conteudo: pergunta.value,
+        mensagemPai: null,
+        mensagensFilhas: [],
+        curtido: null,
     };
 
     await adicionarMensagem(mensagemUsuario);
@@ -50,7 +54,15 @@ const enviarMensagem = async () => {
     }
 
     // mensagem vazia do bot
-    const botMessage: Mensagem = { tipo: 'bot', mensagem: '' };
+    const botMessage: Mensagem = {
+        id: Date.now() + Math.random(),
+        tipo: 'bot',
+        conteudo: '',
+        mensagemPai: mensagemUsuario.id,
+        mensagensFilhas: [],
+        curtido: null,
+    };
+    mensagemUsuario.mensagensFilhas.push(botMessage.id);
     await adicionarMensagem(botMessage);
 
     // Agora começa o streaming
@@ -69,18 +81,17 @@ const enviarMensagem = async () => {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
 
-    const index = mapMensagens.value.length - 1;
     while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        mapMensagens.value[index].mensagem += decoder.decode(value); //input de escrita
+        mapMensagens.value[botMessage.id].conteudo += decoder.decode(value); //input de escrita
         scrollParaUltimaMensagem();
     };
 }
 
 
-async function adicionarMensagem(botMessage: Mensagem) {
-    mapMensagens.value.push(botMessage);
+async function adicionarMensagem(mensagem: Mensagem) {
+    mapMensagens.value[mensagem.id] = mensagem;
     await nextTick();
     scrollParaUltimaMensagem();
 }
@@ -100,7 +111,7 @@ function scrollParaUltimaMensagem() {
         })
     }
 }
- 
+
 </script>
 
 <template>

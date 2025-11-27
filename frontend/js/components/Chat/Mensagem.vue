@@ -8,7 +8,7 @@ defineOptions({ name: 'Mensagem' });
 
 const props = defineProps<{
     mapMensagens: MapMensagens;
-    ids: string[];
+    ids: number[];
 }>();
 
 const indexMensagemSelecionada = ref(props.ids.length - 1);
