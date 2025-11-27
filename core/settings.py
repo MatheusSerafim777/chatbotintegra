@@ -201,5 +201,6 @@ Q_CLUSTER = {
     'timeout': 100,
     'retry': 120,
     'queue_limit': 50,
+    'max_attempts': 1,
     'orm': 'default',
 }
