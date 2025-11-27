@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Mensagem } from './ChatComponente.vue';
+import { TMensagem } from './ChatComponente.vue';
 import markdownit from 'markdown-it';
 
 
@@ -7,7 +7,7 @@ const md = markdownit();
 
 
 defineProps<{
-    mensagem: Mensagem,
+    mensagem: TMensagem,
     indexMensagemSelecionada: number;
     maxMensagemSelecionada: number;
     setIndexMensagemSelecionada: (index: number) => void;

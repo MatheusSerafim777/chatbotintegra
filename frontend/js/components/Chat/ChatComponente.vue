@@ -2,7 +2,7 @@
 import { ref, nextTick, computed } from 'vue';
 import Mensagem from './Mensagem.vue';
 
-export type Mensagem = {
+export type TMensagem = {
     id: number;
     tipo: 'usuario' | 'bot',
     conteudo: string;
@@ -12,7 +12,7 @@ export type Mensagem = {
 }
 
 export type MapMensagens = {
-    [key: number]: Mensagem;
+    [key: number]: TMensagem;
 }
 
 const mapMensagens = ref<MapMensagens>({
@@ -30,20 +30,30 @@ const mensagensRaiz = computed<number[]>(() => Object.values(mapMensagens.value)
 const pergunta = ref('');
 const editable = ref<HTMLElement | null>(null);
 const containerMensagens = ref<HTMLElement | null>(null);
+const mensagemRef = ref<typeof Mensagem | null>(null);
 
+async function adicionarMensagem(mensagem: TMensagem) {
+    mapMensagens.value[mensagem.id] = mensagem;
+    await nextTick();
+    scrollParaUltimaMensagem();
+}
 
 const enviarMensagem = async () => {
     if (!pergunta.value.trim()) return;
 
-    const mensagemUsuario: Mensagem = {
+    const mensagemPaiSelecionada = mensagensRaiz.value.length > 0 ? mensagemRef.value?.obterIdUltimaMensagem() : null;
+    console.log('Mensagem pai selecionada:', mensagemPaiSelecionada);
+    const mensagemUsuario: TMensagem = {
         id: Date.now() + Math.random(),
         tipo: 'usuario',
         conteudo: pergunta.value,
-        mensagemPai: null,
+        mensagemPai: mensagemPaiSelecionada,
         mensagensFilhas: [],
         curtido: null,
     };
-
+    if (mensagemPaiSelecionada !== null) {
+        mapMensagens.value[mensagemPaiSelecionada].mensagensFilhas.push(mensagemUsuario.id);
+    }
     await adicionarMensagem(mensagemUsuario);
 
 
@@ -54,7 +64,7 @@ const enviarMensagem = async () => {
     }
 
     // mensagem vazia do bot
-    const botMessage: Mensagem = {
+    const botMessage: TMensagem = {
         id: Date.now() + Math.random(),
         tipo: 'bot',
         conteudo: '',
@@ -62,7 +72,7 @@ const enviarMensagem = async () => {
         mensagensFilhas: [],
         curtido: null,
     };
-    mensagemUsuario.mensagensFilhas.push(botMessage.id);
+    mapMensagens.value[mensagemUsuario.id].mensagensFilhas.push(botMessage.id);
     await adicionarMensagem(botMessage);
 
     // Agora começa o streaming
@@ -90,12 +100,6 @@ const enviarMensagem = async () => {
 }
 
 
-async function adicionarMensagem(mensagem: Mensagem) {
-    mapMensagens.value[mensagem.id] = mensagem;
-    await nextTick();
-    scrollParaUltimaMensagem();
-}
-
 function handlePaste(e: ClipboardEvent) {
     e.preventDefault()
     const text = e.clipboardData?.getData('text/plain') || ''
@@ -118,7 +122,7 @@ function scrollParaUltimaMensagem() {
     <div class="h-full pb-4 mx-auto flex flex-col justify-between gap-6">
         <div class="overflow-auto max-h-[81vh]" ref="containerMensagens">
             <div class="w-full max-w-3xl mx-auto py-2">
-                <Mensagem :map-mensagens="mapMensagens" :ids="mensagensRaiz" />
+                <Mensagem ref="mensagemRef" v-if="mensagensRaiz.length > 0" :map-mensagens="mapMensagens" :ids="mensagensRaiz" />
             </div>
         </div>
         <form @submit.prevent="enviarMensagem" class="w-full max-w-3xl mx-auto">

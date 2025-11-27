@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { MapMensagens } from './ChatComponente.vue';
+import Mensagem from './Mensagem.vue';
 import MensagemBot from './MensagemBot.vue';
 import MensagemUsuario from './MensagemUsuario.vue';
 
@@ -11,6 +12,8 @@ const props = defineProps<{
     ids: number[];
 }>();
 
+
+
 const indexMensagemSelecionada = ref(props.ids.length - 1);
 
 watch(
@@ -20,15 +23,27 @@ watch(
     }
 );
 
+const setIndexMensagemSelecionada = (index: number) => {
+    if (index < 0 || index >= props.ids.length) return;
+    indexMensagemSelecionada.value = index;
+};
+
 const mensagemSelecionada = computed(() => {
     const id = props.ids[indexMensagemSelecionada.value];
     return props.mapMensagens[id] ?? null;
 });
 
-const setIndexMensagemSelecionada = (index: number) => {
-    if (index < 0 || index >= props.ids.length) return;
-    indexMensagemSelecionada.value = index;
-};
+const mensagemFilhaRef = ref<typeof Mensagem | null>(null);
+
+function obterIdUltimaMensagem(): number {
+    if (mensagemSelecionada.value.mensagensFilhas.length === 0) return mensagemSelecionada.value.id;
+    return mensagemFilhaRef.value?.obterIdUltimaMensagem() || mensagemSelecionada.value.id;
+}
+
+defineExpose({
+    obterIdUltimaMensagem,
+});
+
 </script>
 
 <template>
@@ -46,7 +61,7 @@ const setIndexMensagemSelecionada = (index: number) => {
             :setIndexMensagemSelecionada="setIndexMensagemSelecionada" />
 
         <!-- Recursão -->
-        <Mensagem v-if="mensagemSelecionada.mensagensFilhas.length" :map-mensagens="mapMensagens"
+        <Mensagem ref="mensagemFilhaRef" v-if="mensagemSelecionada.mensagensFilhas.length" :map-mensagens="mapMensagens"
             :ids="mensagemSelecionada.mensagensFilhas" />
     </template>
 </template>

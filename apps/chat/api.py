@@ -1,8 +1,7 @@
-from django.db.models import Q
 from django.http import HttpRequest, StreamingHttpResponse
 from ninja import Router
 
-from chat.models import Conversa, Mensagem
+from chat.models import Conversa
 from chat.rag import Rag
 from chat.schemas import ChatSchema
 
@@ -19,7 +18,6 @@ def chat_endpoint(request: HttpRequest, payload: ChatSchema):
 
     resposta = Rag.run(mensagem)
 
-    
     conversa = Conversa.objects.get_or_create(
         id=payload.id_conversa,
         usuario=request.user if request.user.is_authenticated else None,
