@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{ mensagem: string }>();
+defineProps<{ mensagem: string }>();
 import markdownit from 'markdown-it';
 
 const md = markdownit();
