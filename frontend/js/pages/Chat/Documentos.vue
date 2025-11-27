@@ -16,46 +16,56 @@ const props = defineProps<{
     documentos_pendentes: number;
 }>();
 
-const documentos = ref<Documento[]>( props.documentos);
-const qtdDocumentosProcessados = ref<number>(props.documentos_processados);
-const qtdDocumentosPendentes = ref<number>(props.documentos_pendentes);
+const documentos = ref([...props.documentos]);
+const qtdDocumentosProcessados = ref(props.documentos_processados);
+const qtdDocumentosPendentes = ref(props.documentos_pendentes);
 
-watch(() => props.documentos, (v) => {
-    documentos.value = v;
-})
-watch(() => props.documentos_processados, (v) => {
-    qtdDocumentosProcessados.value = v;
-})
-watch(() => props.documentos_pendentes, (v) => {
-    qtdDocumentosPendentes.value = v;
-})
-
-
-async function atualizarStatusDocumentos(documentosPendentes: Documento[]) {
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    for (const doc of documentos.value) {
-        try {
-            const res = await fetch(`/api/documentos/${doc.id}/status`);
-            if (res.ok) {
-                const data = await res.json();
-                doc.status = data.status;
-                qtdDocumentosProcessados.value = documentos.value.filter((doc) => doc.status == 'processado').length;
-                qtdDocumentosPendentes.value = documentos.value.filter((doc) => doc.status == 'pendente').length;
-            } else {
-                console.error(`Erro ao obter status do documento ${doc.id}: ${res.statusText}`);
-            }
-        } catch (error) {
-            console.error(`Erro ao fazer requisição para documento ${doc.id}: ${error}`);
-        }
+watch(
+    () => ({
+        docs: props.documentos,
+        proc: props.documentos_processados,
+        pend: props.documentos_pendentes
+    }),
+    (v) => {
+        documentos.value = [...v.docs];
+        qtdDocumentosProcessados.value = v.proc;
+        qtdDocumentosPendentes.value = v.pend;
+        atualizarStatusDocumentosPendentes();
     }
-    documentosPendentes = documentosPendentes.filter((doc) => doc.status == 'pendente');
-    if (documentosPendentes.length > 0) {
-        atualizarStatusDocumentos(documentosPendentes);
-    }
-};
+);
 
-const documentosPendentes = documentos.value.filter((doc) => doc.status == 'pendente');
-atualizarStatusDocumentos(documentosPendentes);
+let verificando = false;
+async function atualizarStatusDocumentosPendentes() {
+    if (verificando) return;
+    verificando = true;
+
+    while (true) {
+        const pendentes = documentos.value.filter(d => d.status === "pendente");
+        if (pendentes.length === 0) break;
+
+        await new Promise(r => setTimeout(r, 5000));
+
+        await Promise.all(
+            pendentes.map(async doc => {
+                try {
+                    const res = await fetch(`/api/documentos/${doc.id}/status`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    doc.status = data.status;
+                } catch (e) {
+                    console.error(e);
+                }
+            })
+        );
+
+        qtdDocumentosProcessados.value = documentos.value.filter(d => d.status === 'processado').length;
+        qtdDocumentosPendentes.value = documentos.value.filter(d => d.status === 'pendente').length;
+    }
+
+    verificando = false;
+}
+
+atualizarStatusDocumentosPendentes();
 </script>
 
 <template>
@@ -96,14 +106,16 @@ atualizarStatusDocumentos(documentosPendentes);
                         <tr v-for="documento in documentos" :key="documento.id">
                             <td>{{ documento.id }}</td>
                             <td>{{ documento.nome }}</td>
-                            <td>{{documento.status}}</td>
+                            <td>{{ documento.status }}</td>
                             <td class="w-0 whitespace-nowrap">
                                 <div class="flex gap-2 justify-center">
                                     <a :href="documento.arquivo.url" target="_blank">
                                         <i class="bi bi-eye-fill text-neutral"></i>
                                     </a>
-                                    <Link :href="page.props['urls']['excluir_documento'].replace('%(id)s', documento.id)" method="post">
-                                        <i class="bi bi-trash3-fill text-error"></i>
+                                    <Link
+                                        :href="page.props['urls']['excluir_documento'].replace('%(id)s', documento.id)"
+                                        method="post">
+                                    <i class="bi bi-trash3-fill text-error"></i>
                                     </Link>
                                 </div>
                             </td>

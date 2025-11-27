@@ -9,5 +9,5 @@ export type Documento = {
     id: number;
     nome: string;
     arquivo: FileField;
-    status: string;
+    status: 'pendente' | 'processado' | 'processado';
 }
