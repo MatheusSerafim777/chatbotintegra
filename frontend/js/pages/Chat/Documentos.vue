@@ -113,7 +113,7 @@ atualizarStatusDocumentosPendentes();
                                         <i class="bi bi-eye-fill text-neutral"></i>
                                     </a>
                                     <Link
-                                        :href="page.props['urls']['excluir_documento'].replace('%(id)s', documento.id)"
+                                        :href="page.props['urls']['excluir_documento'].replace('%(id_documento)s', documento.id)"
                                         method="post">
                                     <i class="bi bi-trash3-fill text-error"></i>
                                     </Link>
