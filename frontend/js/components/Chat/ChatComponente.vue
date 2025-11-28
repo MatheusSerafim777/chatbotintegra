@@ -1,29 +1,59 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, computed } from 'vue';
 import Mensagem from './Mensagem.vue';
 
-type Mensagem = {
+export type TMensagem = {
+    id: number;
     tipo: 'usuario' | 'bot',
-    mensagem: string;
+    conteudo: string;
+    mensagemPai: number | null;
+    mensagensFilhas: number[];
+    curtido: boolean | null;
 }
 
-const mensagens = ref<Mensagem[]>([
-    { tipo: 'bot', mensagem: 'Olá! Como posso ajudar você hoje?' },
-]);
+export type MapMensagens = {
+    [key: number]: TMensagem;
+}
+
+const mapMensagens = ref<MapMensagens>({
+    1: { id: 1, tipo: 'bot', conteudo: 'Olá! Como posso ajudar você hoje?', mensagemPai: null, mensagensFilhas: [2, 3], curtido: null },
+    2: { id: 2, tipo: 'usuario', conteudo: 'Oi! Oque é CAR?', mensagemPai: 1, mensagensFilhas: [], curtido: null },
+    3: { id: 3, tipo: 'usuario', conteudo: 'Preciso de ajuda com meu processo.', mensagemPai: 1, mensagensFilhas: [6, 7], curtido: null },
+    4: { id: 4, tipo: 'bot', conteudo: 'Olá! Precisa de ajuda?', mensagemPai: null, mensagensFilhas: [5], curtido: null },
+    5: { id: 5, tipo: 'usuario', conteudo: 'Sim, por favor.', mensagemPai: 4, mensagensFilhas: [], curtido: null },
+    6: { id: 6, tipo: 'bot', conteudo: 'Claro! Com o que você precisa de ajuda?', mensagemPai: 3, mensagensFilhas: [], curtido: null },
+    7: { id: 7, tipo: 'bot', conteudo: 'Estou aqui para ajudar com seu processo.', mensagemPai: 3, mensagensFilhas: [], curtido: null },
+});
+
+const mensagensRaiz = computed<number[]>(() => Object.values(mapMensagens.value).filter(mensagem => mensagem.mensagemPai === null).map(mensagem => mensagem.id!));
 
 const pergunta = ref('');
 const editable = ref<HTMLElement | null>(null);
 const containerMensagens = ref<HTMLElement | null>(null);
+const mensagemRef = ref<typeof Mensagem | null>(null);
 
+async function adicionarMensagem(mensagem: TMensagem) {
+    mapMensagens.value[mensagem.id] = mensagem;
+    await nextTick();
+    scrollParaUltimaMensagem();
+}
 
 const enviarMensagem = async () => {
     if (!pergunta.value.trim()) return;
 
-    const mensagemUsuario: Mensagem = {
+    const mensagemPaiSelecionada = mensagensRaiz.value.length > 0 ? mensagemRef.value?.obterIdUltimaMensagem() : null;
+    console.log('Mensagem pai selecionada:', mensagemPaiSelecionada);
+    const mensagemUsuario: TMensagem = {
+        id: Date.now() + Math.random(),
         tipo: 'usuario',
-        mensagem: pergunta.value
+        conteudo: pergunta.value,
+        mensagemPai: mensagemPaiSelecionada,
+        mensagensFilhas: [],
+        curtido: null,
     };
-
+    if (mensagemPaiSelecionada !== null) {
+        mapMensagens.value[mensagemPaiSelecionada].mensagensFilhas.push(mensagemUsuario.id);
+    }
     await adicionarMensagem(mensagemUsuario);
 
 
@@ -32,9 +62,17 @@ const enviarMensagem = async () => {
     if (editable.value) {
         editable.value.textContent = '';
     }
-      
+
     // mensagem vazia do bot
-    const botMessage: Mensagem = { tipo: 'bot', mensagem: '' };
+    const botMessage: TMensagem = {
+        id: Date.now() + Math.random(),
+        tipo: 'bot',
+        conteudo: '',
+        mensagemPai: mensagemUsuario.id,
+        mensagensFilhas: [],
+        curtido: null,
+    };
+    mapMensagens.value[mensagemUsuario.id].mensagensFilhas.push(botMessage.id);
     await adicionarMensagem(botMessage);
 
     // Agora começa o streaming
@@ -53,21 +91,14 @@ const enviarMensagem = async () => {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
 
-    const index = mensagens.value.length - 1;
     while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        mensagens.value[index].mensagem += decoder.decode(value); //input de escrita
+        mapMensagens.value[botMessage.id].conteudo += decoder.decode(value); //input de escrita
         scrollParaUltimaMensagem();
     };
 }
 
-
-async function adicionarMensagem(botMessage: Mensagem) {
-    mensagens.value.push(botMessage);
-    await nextTick();             
-    scrollParaUltimaMensagem();
-}
 
 function handlePaste(e: ClipboardEvent) {
     e.preventDefault()
@@ -77,7 +108,7 @@ function handlePaste(e: ClipboardEvent) {
 
 function scrollParaUltimaMensagem() {
     const div = containerMensagens.value
-    if(div){
+    if (div) {
         div.scrollTo({
             top: div.scrollHeight,
             behavior: 'smooth',
@@ -89,9 +120,9 @@ function scrollParaUltimaMensagem() {
 
 <template>
     <div class="h-full pb-4 mx-auto flex flex-col justify-between gap-6">
-        <div class="overflow-auto max-h-[81vh]" ref="containerMensagens"> 
+        <div class="overflow-auto max-h-[81vh]" ref="containerMensagens">
             <div class="w-full max-w-3xl mx-auto py-2">
-                <Mensagem v-for="(m, i) in mensagens" :key="i" :mensagem="m.mensagem" :tipo="m.tipo" />
+                <Mensagem ref="mensagemRef" v-if="mensagensRaiz.length > 0" :map-mensagens="mapMensagens" :ids="mensagensRaiz" />
             </div>
         </div>
         <form @submit.prevent="enviarMensagem" class="w-full max-w-3xl mx-auto">
@@ -109,7 +140,7 @@ function scrollParaUltimaMensagem() {
                         class="w-full bg-transparent focus:outline-none p-0 font-medium min-h-6 whitespace-pre-wrap wrap-break-word"
                         @input="pergunta = editable?.innerText ?? ''"
                         @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }"
-                        @paste="handlePaste" >
+                        @paste="handlePaste">
                     </div>
                 </div>
 
