@@ -54,7 +54,7 @@ class DocumentosView(View):
 
 
 class ExcluirDocumentoView(View):
-    def post(self, request: HttpRequest, id: int):
-        documento = get_object_or_404(Documento, id=id)
+    def post(self, request: HttpRequest, id_documento: int):
+        documento = get_object_or_404(Documento, id=id_documento)
         documento.delete()
         return redirect('documentos')

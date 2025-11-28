@@ -50,6 +50,13 @@ const page = usePage();
                         <span class="is-drawer-close:hidden">Documentos</span>
                         </Link>
                     </li>
+                    <li>
+                        <Link :href="page.props.urls['curadoria']" class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
+                            data-tip="Curadoria">
+                        <i class="bi bi-robot"></i>
+                        <span class="is-drawer-close:hidden">Curadoria</span>
+                        </Link>
+                    </li>
                     <hr class="my-2">
                     <li>
                         <Link class="is-drawer-close:hidden">
