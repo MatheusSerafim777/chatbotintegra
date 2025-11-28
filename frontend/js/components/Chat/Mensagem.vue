@@ -12,14 +12,16 @@ const props = defineProps<{
     ids: number[];
 }>();
 
-
-
 const indexMensagemSelecionada = ref(props.ids.length - 1);
 
 watch(
     () => props.ids,
-    (newIds) => {
-        indexMensagemSelecionada.value = newIds.length - 1;
+    (newIds, oldIds) => {
+        if (newIds.length > (oldIds?.length ?? 0)) {
+            indexMensagemSelecionada.value = newIds.length - 1;
+        } else if (indexMensagemSelecionada.value >= newIds.length) {
+            indexMensagemSelecionada.value = newIds.length - 1;
+        }
     }
 );
 
