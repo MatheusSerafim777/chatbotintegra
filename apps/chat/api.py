@@ -2,7 +2,7 @@ from django.http import HttpRequest, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
-from chat.models import Conversa, Documento
+from chat.models import Documento
 from chat.rag import Rag
 from chat.schemas import ChatSchema
 
@@ -19,10 +19,6 @@ def chat_endpoint(request: HttpRequest, payload: ChatSchema):
 
     resposta = Rag.run(mensagem)
 
-    conversa = Conversa.objects.get_or_create(
-        id=payload.id_conversa,
-        usuario=request.user if request.user.is_authenticated else None,
-    )
     if not stream:
         resposta = ''.join(resposta)
 

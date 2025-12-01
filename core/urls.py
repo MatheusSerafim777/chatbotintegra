@@ -10,5 +10,5 @@ urlpatterns = [
     path('contas/', include('contas.urls')),
     path('', include('chat.urls')),
     path('api/', api.urls),
-    path('curadoria/', include('respostas_canonicas.urls'))
+    path('curadoria/', include('respostas_canonicas.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

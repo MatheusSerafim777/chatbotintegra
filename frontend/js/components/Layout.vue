@@ -10,7 +10,7 @@ const page = usePage();
         <input id="sidebar" type="checkbox" class="drawer-toggle" checked />
         <div class="drawer-content flex flex-col min-h-screen">
             <!-- Navbar -->
-            <nav class="navbar w-full sticky top-0 z-20 bg-secondary text-secondary-content">
+            <nav class="navbar w-full sticky top-0 z-20 bg-linear-to-r/shorter  from-neutral to-base-300 text-secondary-content">
                 <label for="sidebar" aria-label="open sidebar" class="btn btn-square btn-ghost">
                     <i class="bi bi-layout-sidebar text-xl"></i>
                 </label>
@@ -23,7 +23,7 @@ const page = usePage();
             </nav>
 
             <!-- Page content here -->
-            <div class="grow">
+            <div class="grow flex flex-col">
 
                 <slot></slot>
             </div>

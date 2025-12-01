@@ -16,13 +16,13 @@ export type MapMensagens = {
 }
 
 const mapMensagens = ref<MapMensagens>({
-    1: { id: 1, tipo: 'bot', conteudo: 'Olá! Como posso ajudar você hoje?', mensagemPai: null, mensagensFilhas: [2, 3], curtido: null },
-    2: { id: 2, tipo: 'usuario', conteudo: 'Oi! Oque é CAR?', mensagemPai: 1, mensagensFilhas: [], curtido: null },
-    3: { id: 3, tipo: 'usuario', conteudo: 'Preciso de ajuda com meu processo.', mensagemPai: 1, mensagensFilhas: [6, 7], curtido: null },
-    4: { id: 4, tipo: 'bot', conteudo: 'Olá! Precisa de ajuda?', mensagemPai: null, mensagensFilhas: [5], curtido: null },
-    5: { id: 5, tipo: 'usuario', conteudo: 'Sim, por favor.', mensagemPai: 4, mensagensFilhas: [], curtido: null },
-    6: { id: 6, tipo: 'bot', conteudo: 'Claro! Com o que você precisa de ajuda?', mensagemPai: 3, mensagensFilhas: [], curtido: null },
-    7: { id: 7, tipo: 'bot', conteudo: 'Estou aqui para ajudar com seu processo.', mensagemPai: 3, mensagensFilhas: [], curtido: null },
+    // 1: { id: 1, tipo: 'bot', conteudo: 'Olá! Como posso ajudar você hoje?', mensagemPai: null, mensagensFilhas: [2, 3], curtido: null },
+    // 2: { id: 2, tipo: 'usuario', conteudo: 'Oi! Oque é CAR?', mensagemPai: 1, mensagensFilhas: [], curtido: null },
+    // 3: { id: 3, tipo: 'usuario', conteudo: 'Preciso de ajuda com meu processo.', mensagemPai: 1, mensagensFilhas: [6, 7], curtido: null },
+    // 4: { id: 4, tipo: 'bot', conteudo: 'Olá! Precisa de ajuda?', mensagemPai: null, mensagensFilhas: [5], curtido: null },
+    // 5: { id: 5, tipo: 'usuario', conteudo: 'Sim, por favor.', mensagemPai: 4, mensagensFilhas: [], curtido: null },
+    // 6: { id: 6, tipo: 'bot', conteudo: 'Claro! Com o que você precisa de ajuda?', mensagemPai: 3, mensagensFilhas: [], curtido: null },
+    // 7: { id: 7, tipo: 'bot', conteudo: 'Estou aqui para ajudar com seu processo.', mensagemPai: 3, mensagensFilhas: [], curtido: null },
 });
 
 const mensagensRaiz = computed<number[]>(() => Object.values(mapMensagens.value).filter(mensagem => mensagem.mensagemPai === null).map(mensagem => mensagem.id!));
@@ -119,10 +119,11 @@ function scrollParaUltimaMensagem() {
 </script>
 
 <template>
-    <div class="h-full pb-4 mx-auto flex flex-col justify-between gap-6">
-        <div class="overflow-auto max-h-[81vh]" ref="containerMensagens">
+    <div class="flex-1 pb-4 mx-auto flex flex-col justify-between w-full">
+        <div class="overflow-auto flex-1 max-h-[85vh]" ref="containerMensagens">
             <div class="w-full max-w-3xl mx-auto py-2">
-                <Mensagem ref="mensagemRef" v-if="mensagensRaiz.length > 0" :map-mensagens="mapMensagens" :ids="mensagensRaiz" />
+                <Mensagem ref="mensagemRef" v-if="mensagensRaiz.length > 0" :map-mensagens="mapMensagens"
+                    :ids="mensagensRaiz" />
             </div>
         </div>
         <form @submit.prevent="enviarMensagem" class="w-full max-w-3xl mx-auto">

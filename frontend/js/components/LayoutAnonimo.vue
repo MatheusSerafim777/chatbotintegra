@@ -6,10 +6,10 @@ const page = usePage();
 <template>
     <div class="min-h-screen flex flex-col">
         <!-- Navbar fixa -->
-        <div class="bg-base-200 shadow-sm sticky top-0 z-20">
+        <div class="bg-base-300 shadow-sm sticky top-0 z-20">
             <div class="navbar mx-auto max-w-3xl">
                 <div class="flex-1">
-                    <Link :href="page.props.urls['sair']" class="btn btn-ghost text-xl">
+                    <Link :href="page.props.urls['index']" class="btn btn-ghost text-xl">
                     Chabot IntegraCAR
                     </Link>
                 </div>
@@ -21,7 +21,7 @@ const page = usePage();
         </div>
 
         <!-- Conteúdo -->
-        <div class="grow">
+        <div class="grow flex flex-col">
 
             <slot></slot>
 
