@@ -11,3 +11,10 @@ export type Documento = {
     arquivo: FileField;
     status: 'pendente' | 'processado' | 'processado';
 }
+
+export type PerguntaCanonica = {
+    id: number;
+    pergunta: string;
+    embedding: string;
+    resposta: string;
+}

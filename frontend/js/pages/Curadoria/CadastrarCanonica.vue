@@ -3,35 +3,38 @@ import { ref } from 'vue';
 import Layout from '@/components/Layout.vue';
 import { usePage, Form, Link } from '@inertiajs/vue3';
 import markdownit from 'markdown-it';
+import DjangoForm from '@/components/form/DjangoForm.vue'
+import { DjangoFormData } from '@/types/djangoForm';
+import FormField from '@/components/form/FormField.vue';
+
+FormField
+defineProps<{ form: DjangoFormData }>();
 
 const page = usePage();
 
 const md = markdownit();
 
-const resposta = ref<string>('');
+const resposta = ref('');
 
 </script>
 
 
 <template>
     <Layout>
+        <Link class="btn m-4 w-fit" :href="page.props['urls']['curadoria']"><i class="bi bi-box-arrow-in-left"></i>Voltar</Link>
         <div class="max-w-3xl mx-auto space-y-4 p-4 w-full">
-            <Link class="btn m-4" :href="page.props['urls']['curadoria']"><i class="bi bi-box-arrow-in-left"></i>Voltar
-            </Link>
 
             <div class="max-w-5xl mx-auto">
-                <Form>
+
+                <Form :action="page.props['urls']['cadastro_canonica']" method="post">
                     <div class="flex flex-col gap-4 p-4">
                         <div>
-                            <label for="pergunta">Pergunta: </label><br>
-                            <input type="text" id="pergunta" placeholder="Pergunta" class="input w-full">
+                            <FormField :field="form.fields[0]"/>
                         </div>
                         <div class="flex gap-5">
 
                             <div class="w-full">
-                                <label for="resposta">Resposta: </label><br>
-                                <textarea type="text" id="resposta" placeholder="Escreva a resposta em Markdown"
-                                    class="textarea w-full h-full" v-model="resposta"></textarea>
+                                <FormField :field="form.fields[1]" @input="resposta = $event.target.value"/>
                             </div>
 
                             <div class="w-full">

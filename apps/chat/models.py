@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tokenize import blank_re
+
+from sqlalchemy import true
 
 from contas.models import Usuario
 from django.core.validators import FileExtensionValidator
@@ -68,7 +71,7 @@ class ChunkDocumeto(models.Model):
 
 class RespostaCanonica(models.Model):
     pergunta = models.TextField()
-    embedding = VectorField()
+    embedding = VectorField(null=True, blank=True)
     resposta = models.TextField()
 
     def __str__(self):

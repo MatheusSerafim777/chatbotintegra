@@ -9,4 +9,9 @@ urlpatterns = [
         views.CadastrarCanonicaView.as_view(),
         name='cadastro_canonica',
     ),
+    path(
+        '<int:id_canonica>/excluir/',
+        views.ExcluirCanonicaView.as_view(),
+        name='excluir_canonica',
+    ),
 ]
