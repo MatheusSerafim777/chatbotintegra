@@ -44,7 +44,6 @@ const resposta = ref('');
                             </div>
 
                         </div>
-
                         <button class="btn btn-primary mt-6 w-fit" type="submit">Cadastrar</button>
                     </div>
                 </Form>

@@ -12,7 +12,6 @@ const props = defineProps<{
 
 </script>
 
-
 <template>
     <Layout>
         <div class="max-w-3xl mx-auto space-y-4 p-4 w-full">
@@ -40,7 +39,6 @@ const props = defineProps<{
                 </div>
                 
             </div>
-
 
         </div>
     </Layout>
