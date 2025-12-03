@@ -11,15 +11,18 @@ from chat.forms import ImportarDocumentosForm
 from chat.models import Conversa, Documento, Mensagem, StatusDocumento
 
 
-class IndexView(View):
+class BaseChatView(View):
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+
+class IndexView(BaseChatView):
     def get(self, request: HttpRequest):
         return render(request, 'Index')
 
 
 @method_decorator(login_required, name='dispatch')
-class ConversaView(View):
-    template_name = 'Chat/Conversa'
-
+class ConversaView(BaseChatView):
     def _gerar_map_mensagens(self, conversa: Conversa):
         mensagens = (
             Mensagem.objects.filter(conversa=conversa)

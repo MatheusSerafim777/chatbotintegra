@@ -1,5 +1,6 @@
 import json
 
+from django.db import transaction
 from django.http import HttpRequest, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from ninja import Router
@@ -12,6 +13,7 @@ chat_router = Router()
 
 
 @chat_router.post('/chat')
+@transaction.atomic
 def chat_endpoint(request: HttpRequest, payload: ChatSchema):
     mensagem = payload.mensagem
     stream = payload.stream

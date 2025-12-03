@@ -1,9 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import ChatAnonimo from '@/pages/Chat/ChatAnonimo.vue'
 import Chat from '@/pages/Chat/Chat.vue'
-import { ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
-const page = usePage()
+import { Usuario } from '@/types/index';
+
+const page = usePage < { user: Usuario | null } > ()
 </script>
 
 <template>

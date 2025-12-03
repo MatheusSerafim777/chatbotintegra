@@ -1,5 +1,6 @@
 import sys
 
+from chat.models import Conversa
 from django.contrib.messages import get_messages
 from django.http import HttpRequest
 from django.urls import get_resolver
@@ -46,6 +47,17 @@ class DataShareMiddleware(object):
         share(
             request,
             urls=self.get_urls,
+        )
+
+        conversas = []
+        if request.user.is_authenticated:
+            conversas = Conversa.objects.filter(usuario=request.user).order_by(
+                '-criado_em'
+            )
+
+        share(
+            request,
+            conversas=conversas,
         )
 
         response = self.get_response(request)

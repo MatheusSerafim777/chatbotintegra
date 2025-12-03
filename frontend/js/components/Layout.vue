@@ -1,8 +1,13 @@
-<script setup>
+<script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import IntegracarLogo from './IntegracarLogo.vue';
+import { Conversa, Usuario } from '@/types/index';
 
-const page = usePage();
+const page = usePage<{
+    urls: Record<string, string>,
+    user: Usuario,
+    conversas: Conversa[],
+}>();
 </script>
 
 <template>
@@ -10,7 +15,8 @@ const page = usePage();
         <input id="sidebar" type="checkbox" class="drawer-toggle" checked />
         <div class="drawer-content flex flex-col min-h-screen">
             <!-- Navbar -->
-            <nav class="navbar w-full sticky top-0 z-20 bg-linear-to-r/shorter  from-neutral to-base-300 text-secondary-content">
+            <nav
+                class="navbar w-full sticky top-0 z-20 bg-linear-to-r/shorter  from-neutral to-base-300 text-secondary-content">
                 <label for="sidebar" aria-label="open sidebar" class="btn btn-square btn-ghost">
                     <i class="bi bi-layout-sidebar text-xl"></i>
                 </label>
@@ -51,21 +57,16 @@ const page = usePage();
                         </Link>
                     </li>
                     <li>
-                        <Link :href="page.props.urls['curadoria']" class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-                            data-tip="Curadoria">
+                        <Link :href="page.props.urls['curadoria']"
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Curadoria">
                         <i class="bi bi-robot"></i>
                         <span class="is-drawer-close:hidden">Curadoria</span>
                         </Link>
                     </li>
                     <hr class="my-2">
-                    <li>
-                        <Link class="is-drawer-close:hidden">
-                        <span>O que é CAR?</span>
-                        </Link>
-                    </li>
-                    <li>
-                        <Link class="is-drawer-close:hidden">
-                        <span>Documentação API</span>
+                    <li v-for="conversa in page.props.conversas" :key="conversa.id">
+                        <Link :href="page.props.urls['conversa'].replace('%(id_conversa)s', conversa.id.toString())" class="is-drawer-close:hidden">
+                        <span>{{ conversa.nome }}</span>
                         </Link>
                     </li>
 

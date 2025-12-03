@@ -11,3 +11,16 @@ export type Documento = {
     arquivo: FileField;
     status: 'pendente' | 'processado' | 'processado';
 }
+
+export type Usuario = {
+    id: number;
+    name: string;
+    email: string;
+    is_staff: boolean;
+    is_superuser: boolean;
+}
+
+export type Conversa = {
+    id: number;
+    nome: string;
+}
