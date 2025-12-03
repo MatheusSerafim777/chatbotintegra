@@ -7,13 +7,12 @@ from ninja import Router
 
 from chat.models import Conversa, Documento, Mensagem
 from chat.rag import Rag
-from chat.schemas import ChatSchema
+from chat.schemas import ChatSchema, CurtirMensagemSchema
 
 chat_router = Router()
 
 
 @chat_router.post('/chat')
-@transaction.atomic
 def chat_endpoint(request: HttpRequest, payload: ChatSchema):
     mensagem = payload.mensagem
     stream = payload.stream
@@ -21,30 +20,40 @@ def chat_endpoint(request: HttpRequest, payload: ChatSchema):
     if not mensagem:
         return 400, {'resposta': 'Mensagem vazia'}
 
-    conversa, _ = Conversa.objects.get_or_create(
-        id=payload.id_conversa,
-        usuario=request.user,
-    )
+    # Criar objetos no banco de forma atômica
+    with transaction.atomic():
+        if payload.id_conversa:
+            conversa = Conversa.objects.select_for_update().get(
+                id=payload.id_conversa,
+                usuario=request.user,
+            )
+        else:
+            conversa = Conversa.objects.create(usuario=request.user)
 
-    mensagem_pai = None
-    if payload.id_mensagem_pai:
-        mensagem_pai = Mensagem.objects.filter(
-            id=payload.id_mensagem_pai,
-            conversa=conversa,
-        ).first()
+        mensagem_pai = None
+        if payload.id_mensagem_pai:
+            mensagem_pai = (
+                Mensagem.objects.filter(
+                    id=payload.id_mensagem_pai,
+                    conversa_id=conversa.id,
+                )
+                .only('id')
+                .first()
+            )
 
-    mensagem_pergunta = Mensagem.objects.create(
-        conversa=conversa,
-        conteudo=mensagem,
-        mensagem_pai=mensagem_pai,
-        tipo=Mensagem.OpcoesTipo.USUARIO,
-    )
+        mensagem_pergunta = Mensagem.objects.create(
+            conversa_id=conversa.id,
+            conteudo=mensagem,
+            mensagem_pai=mensagem_pai,
+            tipo=Mensagem.OpcoesTipo.USUARIO,
+        )
 
-    mensagem_resposta = Mensagem.objects.create(
-        conversa=conversa,
-        mensagem_pai=mensagem_pergunta,
-        tipo=Mensagem.OpcoesTipo.ASSISTENTE,
-    )
+        mensagem_resposta = Mensagem.objects.create(
+            conversa_id=conversa.id,
+            mensagem_pai_id=mensagem_pergunta.id,
+            tipo=Mensagem.OpcoesTipo.ASSISTENTE,
+            conteudo='',
+        )
 
     base_response = {
         'id_conversa': conversa.id,
@@ -55,22 +64,44 @@ def chat_endpoint(request: HttpRequest, payload: ChatSchema):
     resposta = Rag.run(mensagem)
 
     if not stream:
-        resposta = ''.join(resposta)
-        mensagem_resposta.conteudo = resposta
-        mensagem_resposta.save()
-        return 200, base_response | {'resposta': resposta}
+        resposta_completa = ''.join(resposta)
+        Mensagem.objects.filter(id=mensagem_resposta.id).update(
+            conteudo=resposta_completa
+        )
+        return 200, base_response | {'resposta': resposta_completa}
 
     def resposta_streaming():
         yield json.dumps(base_response) + '\n'
+        chunks = []
         for chunk_resposta in resposta:
-            mensagem_resposta.conteudo += chunk_resposta
+            chunks.append(chunk_resposta)
             yield chunk_resposta
-        mensagem_resposta.save()
 
-    return StreamingHttpResponse(resposta_streaming())
+        Mensagem.objects.filter(id=mensagem_resposta.id).update(
+            conteudo=''.join(chunks)
+        )
+
+    return StreamingHttpResponse(
+        resposta_streaming(),
+        content_type='text/plain; charset=utf-8',
+    )
 
 
 @chat_router.get('/documentos/{id_documento}/status')
 def status_documento(request, id_documento):
     documento = get_object_or_404(Documento, id=id_documento)
     return {'status': documento.status}
+
+
+@chat_router.patch('/mensagens/{id_mensagem}/curtir')
+def curtir_mensagem(
+    request: HttpRequest,
+    id_mensagem: int,
+    payload: CurtirMensagemSchema,
+):
+    mensagem = get_object_or_404(
+        Mensagem, id=id_mensagem, conversa__usuario=request.user
+    )
+    mensagem.curtido = payload.curtido
+    mensagem.save(update_fields=['curtido'])
+    return {'curtido': mensagem.curtido}

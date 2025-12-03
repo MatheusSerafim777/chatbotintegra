@@ -8,6 +8,8 @@ const page = usePage<{
     user: Usuario,
     conversas: Conversa[],
 }>();
+
+const pathname = window.location.pathname.replace(/\/+$/, '');
 </script>
 
 <template>
@@ -63,9 +65,12 @@ const page = usePage<{
                         <span class="is-drawer-close:hidden">Curadoria</span>
                         </Link>
                     </li>
+
                     <hr class="my-2">
+
                     <li v-for="conversa in page.props.conversas" :key="conversa.id">
-                        <Link :href="page.props.urls['conversa'].replace('%(id_conversa)s', conversa.id.toString())" class="is-drawer-close:hidden">
+                        <Link :href="page.props.urls['conversa'].replace('%(id_conversa)s', conversa.id.toString())"
+                            class="is-drawer-close:hidden hover:bg-secondary" :class="{ 'bg-accent': pathname === ('/c/' + conversa.id) }">
                         <span>{{ conversa.nome }}</span>
                         </Link>
                     </li>
