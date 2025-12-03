@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, nextTick, computed } from 'vue';
+import { ref, nextTick, computed, watch } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
 import Mensagem from './Mensagem.vue';
 
 export type TMensagem = {
     id: number;
-    tipo: 'usuario' | 'bot',
+    tipo: 'USUARIO' | 'ASSISTENTE';
     conteudo: string;
-    mensagemPai: number | null;
-    mensagensFilhas: number[];
+    mensagem_pai: number | null;
+    mensagens_filhas: number[];
     curtido: boolean | null;
 }
 
@@ -15,22 +16,43 @@ export type MapMensagens = {
     [key: number]: TMensagem;
 }
 
-const mapMensagens = ref<MapMensagens>({
-    // 1: { id: 1, tipo: 'bot', conteudo: 'Olá! Como posso ajudar você hoje?', mensagemPai: null, mensagensFilhas: [2, 3], curtido: null },
-    // 2: { id: 2, tipo: 'usuario', conteudo: 'Oi! Oque é CAR?', mensagemPai: 1, mensagensFilhas: [], curtido: null },
-    // 3: { id: 3, tipo: 'usuario', conteudo: 'Preciso de ajuda com meu processo.', mensagemPai: 1, mensagensFilhas: [6, 7], curtido: null },
-    // 4: { id: 4, tipo: 'bot', conteudo: 'Olá! Precisa de ajuda?', mensagemPai: null, mensagensFilhas: [5], curtido: null },
-    // 5: { id: 5, tipo: 'usuario', conteudo: 'Sim, por favor.', mensagemPai: 4, mensagensFilhas: [], curtido: null },
-    // 6: { id: 6, tipo: 'bot', conteudo: 'Claro! Com o que você precisa de ajuda?', mensagemPai: 3, mensagensFilhas: [], curtido: null },
-    // 7: { id: 7, tipo: 'bot', conteudo: 'Estou aqui para ajudar com seu processo.', mensagemPai: 3, mensagensFilhas: [], curtido: null },
-});
+type chatResponse = {
+    id_conversa: number;
+    id_mensagem_pergunta: number;
+    id_mensagem_resposta: number;
+}
 
-const mensagensRaiz = computed<number[]>(() => Object.values(mapMensagens.value).filter(mensagem => mensagem.mensagemPai === null).map(mensagem => mensagem.id!));
+const page = usePage<{ map_mensagens: MapMensagens, id_conversa: number }>();
 
+const mapMensagens = ref<MapMensagens>(page.props.map_mensagens ?? {});
+
+const idConversa = ref<number | null>(page.props.id_conversa ?? null);
 const pergunta = ref('');
 const editable = ref<HTMLElement | null>(null);
 const containerMensagens = ref<HTMLElement | null>(null);
 const mensagemRef = ref<typeof Mensagem | null>(null);
+
+const mensagensRaiz = computed<number[]>(
+    () =>
+        Object.values(mapMensagens.value)
+            .filter(mensagem => mensagem.mensagem_pai === null)
+            .map(mensagem => mensagem.id!)
+);
+
+console.log(mensagensRaiz.value, idConversa.value);
+
+watch(
+    idConversa, (novoIdConversa, antigoIdConversa) => {
+        console.log('ID da conversa mudou de', antigoIdConversa, 'para', novoIdConversa);
+        if (novoIdConversa !== antigoIdConversa) {
+            if (novoIdConversa == null) {
+                router.visit('/', { replace: true, preserveState: true });
+            } else {
+                router.visit(`/c/${novoIdConversa}/`, { replace: true, preserveState: true });
+            }
+        }
+    }
+)
 
 async function adicionarMensagem(mensagem: TMensagem) {
     mapMensagens.value[mensagem.id] = mensagem;
@@ -41,18 +63,18 @@ async function adicionarMensagem(mensagem: TMensagem) {
 const enviarMensagem = async () => {
     if (!pergunta.value.trim()) return;
 
-    const mensagemPaiSelecionada = mensagensRaiz.value.length > 0 ? mensagemRef.value?.obterIdUltimaMensagem() : null;
+    const mensagemPaiSelecionada: number | null = mensagensRaiz.value.length > 0 ? mensagemRef.value?.obterIdUltimaMensagem() : null;
     console.log('Mensagem pai selecionada:', mensagemPaiSelecionada);
     const mensagemUsuario: TMensagem = {
         id: Date.now() + Math.random(),
-        tipo: 'usuario',
+        tipo: 'USUARIO',
         conteudo: pergunta.value,
-        mensagemPai: mensagemPaiSelecionada,
-        mensagensFilhas: [],
+        mensagem_pai: mensagemPaiSelecionada,
+        mensagens_filhas: [],
         curtido: null,
     };
     if (mensagemPaiSelecionada !== null) {
-        mapMensagens.value[mensagemPaiSelecionada].mensagensFilhas.push(mensagemUsuario.id);
+        mapMensagens.value[mensagemPaiSelecionada].mensagens_filhas.push(mensagemUsuario.id);
     }
     await adicionarMensagem(mensagemUsuario);
 
@@ -66,22 +88,26 @@ const enviarMensagem = async () => {
     // mensagem vazia do bot
     const botMessage: TMensagem = {
         id: Date.now() + Math.random(),
-        tipo: 'bot',
+        tipo: 'ASSISTENTE',
         conteudo: '',
-        mensagemPai: mensagemUsuario.id,
-        mensagensFilhas: [],
+        mensagem_pai: mensagemUsuario.id,
+        mensagens_filhas: [],
         curtido: null,
     };
-    mapMensagens.value[mensagemUsuario.id].mensagensFilhas.push(botMessage.id);
+    mapMensagens.value[mensagemUsuario.id].mensagens_filhas.push(botMessage.id);
     await adicionarMensagem(botMessage);
 
     // Agora começa o streaming
+    const payload = {
+        mensagem: lastUserMessage,
+        stream: true,
+        id_mensagem_pai: mensagemPaiSelecionada,
+        id_conversa: idConversa.value,
+    };
+    console.log('Payload enviado:', payload);
     const response = await fetch('/api/chat', {
         method: 'POST',
-        body: JSON.stringify({
-            mensagem: lastUserMessage,
-            stream: true
-        }),
+        body: JSON.stringify(payload),
     });
 
     if (!response.body) {
@@ -91,10 +117,51 @@ const enviarMensagem = async () => {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
 
+    let primeiro = true;
+    let idMensagemBot = botMessage.id;
     while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        mapMensagens.value[botMessage.id].conteudo += decoder.decode(value); //input de escrita
+        if (primeiro) {
+            primeiro = false;
+            const dados: chatResponse = JSON.parse(decoder.decode(value));
+            idConversa.value = dados.id_conversa;
+
+            // Atualiza o ID da mensagem do usuário
+            const idAntigoUsuario = mensagemUsuario.id;
+            const novoIdUsuario = dados.id_mensagem_pergunta;
+            mensagemUsuario.id = novoIdUsuario;
+            delete mapMensagens.value[idAntigoUsuario];
+            mapMensagens.value[novoIdUsuario] = mensagemUsuario;
+
+            // Atualiza a referência na mensagem pai
+            if (mensagemPaiSelecionada !== null) {
+                const filhas = mapMensagens.value[mensagemPaiSelecionada].mensagens_filhas;
+                const index = filhas.indexOf(idAntigoUsuario);
+                if (index !== -1) {
+                    filhas[index] = novoIdUsuario;
+                }
+            }
+
+            // Atualiza o ID da mensagem do bot
+            const idAntigoBot = botMessage.id;
+            const novoIdBot = dados.id_mensagem_resposta;
+            botMessage.id = novoIdBot;
+            botMessage.mensagem_pai = novoIdUsuario;
+            delete mapMensagens.value[idAntigoBot];
+            mapMensagens.value[novoIdBot] = botMessage;
+            idMensagemBot = novoIdBot;
+
+            // Atualiza a referência na mensagem do usuário
+            const filhasUsuario = mapMensagens.value[novoIdUsuario].mensagens_filhas;
+            const indexBot = filhasUsuario.indexOf(idAntigoBot);
+            if (indexBot !== -1) {
+                filhasUsuario[indexBot] = novoIdBot;
+            }
+
+            continue;
+        }
+        mapMensagens.value[idMensagemBot].conteudo += decoder.decode(value); //input de escrita
         scrollParaUltimaMensagem();
     };
 }
@@ -103,7 +170,7 @@ const enviarMensagem = async () => {
 function handlePaste(e: ClipboardEvent) {
     e.preventDefault()
     const text = e.clipboardData?.getData('text/plain') || ''
-    document.execCommand('insertText', false, text)
+    document.execCommand('insertText', false, text) 
 }
 
 function scrollParaUltimaMensagem() {
@@ -137,7 +204,8 @@ function scrollParaUltimaMensagem() {
                     Digite sua mensagem...
                 </span>
                 <div class="w-full max-h-60 overflow-scroll">
-                    <div ref="editable" id="pergunta" contenteditable="true" role="textbox" aria-multiline="true"
+                    <div ref="editable" autofocus="true" id="pergunta" contenteditable="true" role="textbox"
+                        aria-multiline="true"
                         class="w-full bg-transparent focus:outline-none p-0 font-medium min-h-6 whitespace-pre-wrap wrap-break-word"
                         @input="pergunta = editable?.innerText ?? ''"
                         @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }"

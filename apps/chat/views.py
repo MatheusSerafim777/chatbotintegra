@@ -1,18 +1,65 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.aggregates import ArrayAgg
+from django.db.models import F
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
-from inertia import render
+from inertia import render, share
 
 from chat.forms import ImportarDocumentosForm
-from chat.models import Documento, StatusDocumento
+from chat.models import Conversa, Documento, Mensagem, StatusDocumento
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class IndexView(View):
     def get(self, request: HttpRequest):
+        return render(request, 'Index')
+
+
+@method_decorator(login_required, name='dispatch')
+class ConversaView(View):
+    template_name = 'Chat/Conversa'
+
+    def _gerar_map_mensagens(self, conversa: Conversa):
+        mensagens = (
+            Mensagem.objects.filter(conversa=conversa)
+            .order_by('criado_em')
+            .annotate(
+                mensagens_filhas=ArrayAgg(
+                    F('filhos__id'),
+                    distinct=True,
+                )
+            )
+        )
+        map_mensagens = {}
+
+        for mensagem in mensagens:
+            map_mensagens[mensagem.id] = {
+                'id': mensagem.id,
+                'conteudo': mensagem.conteudo,
+                'tipo': mensagem.tipo,
+                'mensagem_pai': mensagem.mensagem_pai_id,
+                'mensagens_filhas': mensagem.mensagens_filhas
+                if mensagem.mensagens_filhas != [None]
+                else [],
+                'curtido': mensagem.curtido,
+            }
+
+        return map_mensagens
+
+    def get(self, request: HttpRequest, id_conversa: int):
+        conversa = get_object_or_404(
+            Conversa,
+            id=id_conversa,
+            usuario=request.user,
+        )
+
+        share(
+            request=request,
+            id_conversa=conversa.id,
+            map_mensagens=self._gerar_map_mensagens(conversa),
+        )
+
         return render(request, 'Index')
 
 

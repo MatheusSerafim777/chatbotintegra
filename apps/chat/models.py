@@ -78,10 +78,12 @@ class RespostaCanonica(models.Model):
 class Conversa(models.Model):
     usuario = models.ForeignKey(
         Usuario,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='conversas',
+        null=True,
+        blank=True,
     )
-    nome = models.CharField(max_length=50)
+    nome = models.CharField(max_length=50, default='Nova Conversa')
     criado_em = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -99,7 +101,7 @@ class Mensagem(models.Model):
         related_name='mensagens',
     )
 
-    mensagem_anterior = models.ForeignKey(
+    mensagem_pai = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
         related_name='filhos',
@@ -114,18 +116,19 @@ class Mensagem(models.Model):
         blank=True,
     )
 
-    tipo_usuario = models.CharField(
+    conteudo = models.TextField(blank=True, default='')
+
+    tipo = models.CharField(
         max_length=20,
         choices=OpcoesTipo.choices,
     )
 
-    like = models.BooleanField(
+    curtido = models.BooleanField(
         null=True,
         blank=True,
     )
 
     criado_em = models.DateTimeField(auto_now_add=True)
-    conteudo = models.TextField()
 
     def __str__(self):
         return self.conteudo[:50]
