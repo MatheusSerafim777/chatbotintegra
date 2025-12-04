@@ -46,21 +46,21 @@ const pathname = window.location.pathname.replace(/\/+$/, '');
                     <div class="h-14"></div>
                     <li>
                         <Link :href="page.props.urls['index']"
-                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Nova Conversa">
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg" data-tip="Nova Conversa">
                         <i class="bi bi-pencil-square"></i>
                         <span class="is-drawer-close:hidden">Nova Conversa</span>
                         </Link>
                     </li>
                     <li>
                         <Link :href="page.props.urls['documentos']"
-                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Documentos">
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg" data-tip="Documentos">
                         <i class="bi bi-file-earmark-text"></i>
                         <span class="is-drawer-close:hidden">Documentos</span>
                         </Link>
                     </li>
                     <li>
                         <Link :href="page.props.urls['curadoria']"
-                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Curadoria">
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg" data-tip="Curadoria">
                         <i class="bi bi-robot"></i>
                         <span class="is-drawer-close:hidden">Curadoria</span>
                         </Link>
@@ -70,7 +70,7 @@ const pathname = window.location.pathname.replace(/\/+$/, '');
 
                     <li v-for="conversa in page.props.conversas" :key="conversa.id">
                         <Link :href="page.props.urls['conversa'].replace('%(id_conversa)s', conversa.id.toString())"
-                            class="is-drawer-close:hidden hover:bg-secondary" :class="{ 'bg-accent': pathname === ('/c/' + conversa.id) }">
+                            class="is-drawer-close:hidden hover:bg-secondary rounded-lg" :class="{ 'bg-accent': pathname === ('/c/' + conversa.id) }">
                         <span>{{ conversa.nome }}</span>
                         </Link>
                     </li>
