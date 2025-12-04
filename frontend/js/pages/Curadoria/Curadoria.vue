@@ -31,7 +31,7 @@ const props = defineProps<{
                                     <i class="bi bi-trash3-fill text-error"></i>
                             </Link>
 
-                            <Link method="post">
+                            <Link method="get" :href="page.props.urls.editar_canonica.replace('%(id_canonica)s', pergunta.id)">
                                     <i class="bi bi-pencil"></i>
                             </Link>
                         </div>

@@ -14,4 +14,9 @@ urlpatterns = [
         views.ExcluirCanonicaView.as_view(),
         name='excluir_canonica',
     ),
+    path(
+        '<int:id_canonica>/editar/',
+        views.EditarCanonicaView.as_view(),
+        name='editar_canonica',
+    ),
 ]
