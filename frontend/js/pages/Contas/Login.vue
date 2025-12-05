@@ -13,7 +13,7 @@ const page = usePage();
 <template>
     <LayoutAnonimo>
 
-        <div class="flex h-screen items-center justify-center">
+        <div class="flex grow h-full items-center justify-center">
             <div class="card card-sm overflow-hidden min-w-xs sm:min-w-sm">
                 <div class="card bg-base-200 card-border border-base-300 card-sm overflow-hidden ">
                     <div class="border-base-300 border-b border-dashed">

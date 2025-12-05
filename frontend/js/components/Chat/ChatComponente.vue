@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, computed, watch } from 'vue';
+import { ref, nextTick, computed, watch, onMounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import Mensagem from './Mensagem.vue';
 
@@ -38,8 +38,6 @@ const mensagensRaiz = computed<number[]>(
             .filter(mensagem => mensagem.mensagem_pai === null)
             .map(mensagem => mensagem.id!)
 );
-
-console.log(mensagensRaiz.value, idConversa.value);
 
 watch(
     idConversa, (novoIdConversa, antigoIdConversa) => {
@@ -170,19 +168,23 @@ const enviarMensagem = async () => {
 function handlePaste(e: ClipboardEvent) {
     e.preventDefault()
     const text = e.clipboardData?.getData('text/plain') || ''
-    document.execCommand('insertText', false, text) 
+    document.execCommand('insertText', false, text)
 }
 
-function scrollParaUltimaMensagem() {
+function scrollParaUltimaMensagem(smooth = true) {
     const div = containerMensagens.value
     if (div) {
         div.scrollTo({
             top: div.scrollHeight,
-            behavior: 'smooth',
+            behavior: smooth? 'smooth' : 'auto',
         })
     }
 }
 
+onMounted(async () => {
+    await nextTick();
+    scrollParaUltimaMensagem(false);
+})
 </script>
 
 <template>

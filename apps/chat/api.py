@@ -3,7 +3,9 @@ import json
 from django.db import transaction
 from django.http import HttpRequest, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
+from django_cte import CTE, with_cte
 from ninja import Router
+from openai import APIConnectionError
 
 from chat.models import Conversa, Documento, Mensagem
 from chat.rag import Rag
@@ -20,6 +22,25 @@ def chat_endpoint(request: HttpRequest, payload: ChatSchema):
     if not mensagem:
         return 400, {'resposta': 'Mensagem vazia'}
 
+    def mensagens_cte(cte: CTE):
+        values = ('id', 'mensagem_pai_id', 'conteudo', 'criado_em')
+        return (
+            Mensagem.objects.filter(
+                conversa_id=payload.id_conversa,
+                id=payload.id_mensagem_pai,
+            )
+            .values(*values)
+            .union(
+                cte.join(Mensagem, id=cte.col.mensagem_pai_id).values(*values),
+                all=True,
+            )
+        )
+
+    cte = CTE.recursive(mensagens_cte)
+    mensagens = with_cte(
+        cte, select=cte.join(Mensagem, id=cte.col.id).order_by('criado_em')
+    )
+
     # Criar objetos no banco de forma atômica
     with transaction.atomic():
         if payload.id_conversa:
@@ -28,7 +49,13 @@ def chat_endpoint(request: HttpRequest, payload: ChatSchema):
                 usuario=request.user,
             )
         else:
-            conversa = Conversa.objects.create(usuario=request.user)
+            tamanho_maximo = 20
+            conversa = Conversa.objects.create(
+                usuario=request.user,
+                nome=mensagem[:tamanho_maximo] + '...'
+                if len(mensagem) > tamanho_maximo
+                else mensagem,
+            )
 
         mensagem_pai = None
         if payload.id_mensagem_pai:
@@ -61,7 +88,7 @@ def chat_endpoint(request: HttpRequest, payload: ChatSchema):
         'id_mensagem_resposta': mensagem_resposta.id,
     }
 
-    resposta = Rag.run(mensagem)
+    resposta = Rag.run(mensagem, mensagens)
 
     if not stream:
         resposta_completa = ''.join(resposta)
@@ -73,7 +100,14 @@ def chat_endpoint(request: HttpRequest, payload: ChatSchema):
     def resposta_streaming():
         yield json.dumps(base_response) + '\n'
         chunks = []
-        for chunk_resposta in resposta:
+        try:
+            for chunk_resposta in resposta:
+                chunks.append(chunk_resposta)
+                yield chunk_resposta
+        except APIConnectionError:
+            chunk_resposta = (
+                '\n\nUm erro inesperado ocorreu durante a gereção da resposta.'
+            )
             chunks.append(chunk_resposta)
             yield chunk_resposta
 

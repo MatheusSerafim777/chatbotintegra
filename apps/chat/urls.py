@@ -7,6 +7,11 @@ urlpatterns = [
     path(
         'c/<int:id_conversa>/', views.ConversaView.as_view(), name='conversa'
     ),
+    path(
+        'c/<int:id_conversa>/excluir/',
+        views.ExcluirConversaView.as_view(),
+        name='excluir_conversa',
+    ),
     path('documentos/', views.DocumentosView.as_view(), name='documentos'),
     path(
         'documentos/<int:id_documento>/excluir/',

@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { usePage, Form, Link } from '@inertiajs/vue3';
+import { usePage, Link, useForm } from '@inertiajs/vue3';
 
 import Layout from '@/components/Layout.vue';
 import type { DjangoFormData } from "@/types/djangoForm";
 import type { Documento } from '@/types/index';
-import DjangoForm from '@/components/form/DjangoForm.vue'
 import { ref, watch } from 'vue';
+import FormField from '@/components/form/FormField.vue';
 
 
-const page = usePage();
+const page = usePage<{
+    urls: Record<string, string>,
+}>();
 const props = defineProps<{
     importar_documentos_form: DjangoFormData,
     documentos: Documento[];
@@ -66,6 +68,14 @@ async function atualizarStatusDocumentosPendentes() {
 }
 
 atualizarStatusDocumentosPendentes();
+
+const form = useForm({
+    documentos: [],
+})
+function submit() {
+    form.post(page.props['urls']['documentos']);
+}
+
 </script>
 
 <template>
@@ -81,12 +91,14 @@ atualizarStatusDocumentosPendentes();
                     <p class="font-bold text-2xl text-center">{{ qtdDocumentosPendentes }}</p>
                 </div>
                 <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300">
-                    <Form :action="page.props['urls']['documentos']" method="post" class="flex gap-2 items-center">
-                        <DjangoForm :form="importar_documentos_form" />
+                    <form @submit.prevent="submit" class="flex gap-2 items-center">
+                        <div></div>
+                        <FormField :field="importar_documentos_form.fields[0]"
+                            @input="form.documentos = Array.from($event.target.files)" />
                         <button class="btn px-2 h-14 rounded">
                             <i class="bi bi-plus-lg "></i>
                         </button>
-                    </Form>
+                    </form>
                 </div>
             </div>
 
@@ -113,7 +125,7 @@ atualizarStatusDocumentosPendentes();
                                         <i class="bi bi-eye-fill text-neutral"></i>
                                     </a>
                                     <Link
-                                        :href="page.props['urls']['excluir_documento'].replace('%(id_documento)s', documento.id)"
+                                        :href="page.props['urls']['excluir_documento'].replace('%(id_documento)s', documento.id.toString())"
                                         method="post">
                                     <i class="bi bi-trash3-fill text-error"></i>
                                     </Link>

@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import F
@@ -5,6 +7,7 @@ from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from inertia import render, share
 
 from chat.forms import ImportarDocumentosForm
@@ -66,7 +69,7 @@ class ConversaView(BaseChatView):
         return render(request, 'Index')
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator([login_required, csrf_exempt], name='dispatch')
 class DocumentosView(View):
     template_name = 'Chat/Documentos'
     form_class = ImportarDocumentosForm
@@ -94,7 +97,14 @@ class DocumentosView(View):
         return render(request, self.template_name, context)
 
     def post(self, request: HttpRequest):
-        form = self.form_class({}, request.FILES)
+        dados = {
+            'documentos': [
+                doc
+                for name, doc in request.FILES.items()
+                if re.compile(r'^documentos\[\d+\]$').match(name)
+            ]
+        }
+        form = self.form_class({}, dados)
         if not form.is_valid():
             return self.get(request, {'importar_documentos_form': form})
 
@@ -108,3 +118,20 @@ class ExcluirDocumentoView(View):
         documento = get_object_or_404(Documento, id=id_documento)
         documento.delete()
         return redirect('documentos')
+
+
+@method_decorator(login_required, name='dispatch')
+class ExcluirConversaView(View):
+    def post(self, request: HttpRequest, id_conversa: int):
+        conversa = get_object_or_404(
+            Conversa,
+            id=id_conversa,
+            usuario=request.user,
+        )
+        conversa.delete()
+
+        referer = request.META.get('HTTP_REFERER', '')
+        if f'/c/{id_conversa}/' in referer:
+            return redirect('index')
+
+        return redirect(referer or 'index')

@@ -11,13 +11,13 @@ from django.db.models import (
 )
 from django.db.models.functions import Rank
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pgvector.django import CosineDistance
 
 from chat.functions import BM25Score, PdbQueryCast
-from chat.models import ChunkDocumeto, Documento, StatusDocumento
+from chat.models import ChunkDocumeto, Documento, Mensagem, StatusDocumento
 
 
 class Rag:
@@ -153,7 +153,10 @@ class Rag:
         return [chunk.conteudo for chunk in qs]
 
     @staticmethod
-    def run(query: str) -> Generator[str, None, None]:
+    def run(
+        query: str,
+        mensagens: QuerySet[Mensagem],
+    ) -> Generator[str, None, None]:
         contexto = '\n\n\n'.join(Rag.top_k_chunks(query, k=10))
 
         mensagens = [
@@ -171,6 +174,12 @@ class Rag:
                     '- Antes de responder, verifique cuidadosamente se a informação está no contexto.\n'
                 )
             ),
+            *[
+                HumanMessage(m.conteudo)
+                if m.tipo == Mensagem.OpcoesTipo.USUARIO
+                else AIMessage(m.conteudo)
+                for m in mensagens
+            ],
             HumanMessage(query),
         ]
 
