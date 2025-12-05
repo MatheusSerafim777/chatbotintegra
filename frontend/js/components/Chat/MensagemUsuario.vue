@@ -42,7 +42,7 @@ async function copiarMensagem() {
             <p v-html="escapeHtml(mensagem.conteudo)"></p>
         </div>
         <div
-            class="flex gap-0 opacity-0 pointer-events-none transition group-hover:opacity-100 group-hover:pointer-events-auto">
+            class="flex gap-0 opacity-0 pointer-events-none transition hover:transition-none group-hover:opacity-100 group-hover:pointer-events-auto">
             <button class="btn btn-ghost btn-xs btn-square" @click="copiarMensagem">
                 <i class="text-base" :class="copiado ? 'bi bi-check-lg' : 'bi bi-copy'"></i>
             </button>

@@ -3,7 +3,9 @@
 import Layout from '@/components/Layout.vue';
 
 import { usePage, Link } from '@inertiajs/vue3';
-const page = usePage();
+const page = usePage<{
+    urls: Record<string, string>,
+}>();
 </script>
 
 

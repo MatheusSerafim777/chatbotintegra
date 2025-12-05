@@ -8,7 +8,9 @@ import DjangoForm from '@/components/form/DjangoForm.vue'
 
 defineProps<{ form: DjangoFormData }>();
 
-const page = usePage();
+const page = usePage<{
+    urls: Record<string, string>,
+}>();
 </script>
 
 

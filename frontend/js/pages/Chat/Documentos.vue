@@ -1,11 +1,33 @@
 <script setup lang="ts">
-import { usePage, Link, useForm } from '@inertiajs/vue3';
+import { usePage, useForm, router } from '@inertiajs/vue3';
 
 import Layout from '@/components/Layout.vue';
 import type { DjangoFormData } from "@/types/djangoForm";
 import type { Documento } from '@/types/index';
 import { ref, watch } from 'vue';
 import FormField from '@/components/form/FormField.vue';
+
+const documentoParaExcluir = ref<Documento | null>(null);
+const modalExclusao = ref<HTMLDialogElement | null>(null);
+
+function abrirModalExclusao(documento: Documento) {
+    documentoParaExcluir.value = documento;
+    modalExclusao.value?.showModal();
+}
+
+function confirmarExclusao() {
+    if (documentoParaExcluir.value) {
+        const url = page.props['urls']['excluir_documento'].replace('%(id_documento)s', documentoParaExcluir.value.id.toString());
+        router.post(url);
+    }
+    modalExclusao.value?.close();
+    documentoParaExcluir.value = null;
+}
+
+function cancelarExclusao() {
+    modalExclusao.value?.close();
+    documentoParaExcluir.value = null;
+}
 
 
 const page = usePage<{
@@ -124,11 +146,9 @@ function submit() {
                                     <a :href="documento.arquivo.url" target="_blank">
                                         <i class="bi bi-eye-fill text-neutral"></i>
                                     </a>
-                                    <Link
-                                        :href="page.props['urls']['excluir_documento'].replace('%(id_documento)s', documento.id.toString())"
-                                        method="post">
-                                    <i class="bi bi-trash3-fill text-error"></i>
-                                    </Link>
+                                    <button @click="abrirModalExclusao(documento)" class="cursor-pointer">
+                                        <i class="bi bi-trash3-fill text-error"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -136,6 +156,24 @@ function submit() {
                 </table>
 
             </div>
+
+            <!-- Modal de confirmação de exclusão -->
+            <dialog ref="modalExclusao" class="modal">
+                <div class="modal-box">
+                    <h3 class="font-bold text-lg">Confirmar exclusão</h3>
+                    <p class="py-4">
+                        Tem certeza que deseja excluir o documento
+                        <strong>{{ documentoParaExcluir?.nome }}</strong>?
+                    </p>
+                    <div class="modal-action">
+                        <button class="btn" @click="cancelarExclusao">Cancelar</button>
+                        <button class="btn btn-error" @click="confirmarExclusao">Excluir</button>
+                    </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button @click="cancelarExclusao">close</button>
+                </form>
+            </dialog>
         </div>
     </Layout>
 </template>
