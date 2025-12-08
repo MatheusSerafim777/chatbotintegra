@@ -31,12 +31,12 @@ const props = defineProps<{
                         <div class="flex gap-4 ml-4">
 
                             <Link method="post"
-                                :href="page.props['urls']['excluir_canonica'].replace('%(id_canonica)s', pergunta.id)">
+                                :href="page.props['urls']['excluir_canonica'].replace('%(id_canonica)s', pergunta.id.toString())">
                                 <i class="bi bi-trash3-fill text-error"></i>
                             </Link>
 
                             <Link method="get"
-                                :href="page.props.urls.editar_canonica.replace('%(id_canonica)s', pergunta.id)">
+                                :href="page.props.urls.editar_canonica.replace('%(id_canonica)s', pergunta.id.toString())">
                                 <i class="bi bi-pencil"></i>
                             </Link>
                         </div>
