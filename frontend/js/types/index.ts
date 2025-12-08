@@ -24,3 +24,10 @@ export type Conversa = {
     id: number;
     nome: string;
 }
+
+export type PerguntaCanonica = {
+    id: number;
+    pergunta: string;
+    embedding: string;
+    resposta: string;
+}
