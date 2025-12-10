@@ -13,6 +13,19 @@ export type Documento = {
     tipo_documento: 'legislacao' | 'manual';
 }
 
+export type Usuario = {
+    id: number;
+    name: string;
+    email: string;
+    is_staff: boolean;
+    is_superuser: boolean;
+}
+
+export type Conversa = {
+    id: number;
+    nome: string;
+}
+
 export type PerguntaCanonica = {
     id: number;
     pergunta: string;

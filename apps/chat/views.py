@@ -1,22 +1,75 @@
+import re
+
 from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.aggregates import ArrayAgg
+from django.db.models import F
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from inertia import render
+from inertia import render, share
 
 from chat.forms import ImportarDocumentosForm
-from chat.models import Documento, StatusDocumento
+from chat.models import Conversa, Documento, Mensagem, StatusDocumento
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class IndexView(View):
+class BaseChatView(View):
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+
+class IndexView(BaseChatView):
     def get(self, request: HttpRequest):
         return render(request, 'Index')
 
 
 @method_decorator(login_required, name='dispatch')
+class ConversaView(BaseChatView):
+    def _gerar_map_mensagens(self, conversa: Conversa):
+        mensagens = (
+            Mensagem.objects.filter(conversa=conversa)
+            .order_by('criado_em')
+            .annotate(
+                mensagens_filhas=ArrayAgg(
+                    F('filhos__id'),
+                    distinct=True,
+                )
+            )
+        )
+        map_mensagens = {}
+
+        for mensagem in mensagens:
+            map_mensagens[mensagem.id] = {
+                'id': mensagem.id,
+                'conteudo': mensagem.conteudo,
+                'tipo': mensagem.tipo,
+                'mensagem_pai': mensagem.mensagem_pai_id,
+                'mensagens_filhas': mensagem.mensagens_filhas
+                if mensagem.mensagens_filhas != [None]
+                else [],
+                'curtido': mensagem.curtido,
+            }
+
+        return map_mensagens
+
+    def get(self, request: HttpRequest, id_conversa: int):
+        conversa = get_object_or_404(
+            Conversa,
+            id=id_conversa,
+            usuario=request.user,
+        )
+
+        share(
+            request=request,
+            id_conversa=conversa.id,
+            map_mensagens=self._gerar_map_mensagens(conversa),
+        )
+
+        return render(request, 'Index')
+
+
+@method_decorator([login_required, csrf_exempt], name='dispatch')
 class DocumentosView(View):
     template_name = 'Chat/Documentos'
     form_class = ImportarDocumentosForm
@@ -44,7 +97,14 @@ class DocumentosView(View):
         return render(request, self.template_name, context)
 
     def post(self, request: HttpRequest):
-        form = self.form_class({}, request.FILES)
+        dados = {
+            'documentos': [
+                doc
+                for name, doc in request.FILES.items()
+                if re.compile(r'^documentos\[\d+\]$').match(name)
+            ]
+        }
+        form = self.form_class({}, dados)
         if not form.is_valid():
             return self.get(request, {'importar_documentos_form': form})
 
@@ -58,3 +118,20 @@ class ExcluirDocumentoView(View):
         documento = get_object_or_404(Documento, id=id_documento)
         documento.delete()
         return redirect('documentos')
+
+
+@method_decorator(login_required, name='dispatch')
+class ExcluirConversaView(View):
+    def post(self, request: HttpRequest, id_conversa: int):
+        conversa = get_object_or_404(
+            Conversa,
+            id=id_conversa,
+            usuario=request.user,
+        )
+        conversa.delete()
+
+        referer = request.META.get('HTTP_REFERER', '')
+        if f'/c/{id_conversa}/' in referer:
+            return redirect('index')
+
+        return redirect(referer or 'index')

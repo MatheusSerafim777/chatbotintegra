@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { TMensagem } from './ChatComponente.vue';
+import { ref } from 'vue';
 
-defineProps<{
+const props = defineProps<{
     mensagem: TMensagem,
     indexMensagemSelecionada: number;
     maxMensagemSelecionada: number;
     setIndexMensagemSelecionada: (index: number) => void;
 }>();
+
+const copiado = ref(false);
 
 function escapeHtml(str: string): string {
     return str
@@ -18,6 +21,18 @@ function escapeHtml(str: string): string {
         .replace(/\n/g, '<br>');
 }
 
+async function copiarMensagem() {
+    try {
+        await navigator.clipboard.writeText(props.mensagem.conteudo);
+        copiado.value = true;
+        setTimeout(() => {
+            copiado.value = false;
+        }, 2000);
+    } catch (error) {
+        console.error('Erro ao copiar mensagem:', error);
+    }
+}
+
 </script>
 
 <template>
@@ -27,9 +42,9 @@ function escapeHtml(str: string): string {
             <p v-html="escapeHtml(mensagem.conteudo)"></p>
         </div>
         <div
-            class="flex gap-0 opacity-0 pointer-events-none transition group-hover:opacity-100 group-hover:pointer-events-auto">
-            <button class="btn btn-ghost btn-xs btn-square">
-                <i class="bi bi-copy text-base"></i>
+            class="flex gap-0 opacity-0 pointer-events-none transition hover:transition-none group-hover:opacity-100 group-hover:pointer-events-auto">
+            <button class="btn btn-ghost btn-xs btn-square" @click="copiarMensagem">
+                <i class="text-base" :class="copiado ? 'bi bi-check-lg' : 'bi bi-copy'"></i>
             </button>
             <button class="btn btn-ghost btn-xs btn-square">
                 <i class="bi bi-pencil text-base"></i>

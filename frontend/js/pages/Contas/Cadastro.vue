@@ -8,14 +8,16 @@ import DjangoForm from '@/components/form/DjangoForm.vue'
 
 defineProps<{ form: DjangoFormData }>();
 
-const page = usePage();
+const page = usePage<{
+    urls: Record<string, string>,
+}>();
 </script>
 
 
 <template>
     <LayoutAnonimo>
-        <div class="flex h-screen items-center justify-center">
-            <div class="card bg-base-200 card-border border-base-300 card-sm overflow-hidden min-w-xs sm:min-w-sm">
+        <div class="flex grow h-full items-center justify-center">
+            <div class="card bg-base-200 card-border border-base-300 card-sm min-w-xs sm:min-w-sm">
                 <div class="border-base-300 border-b border-dashed">
                     <div class="flex items-center gap-2 p-4">
                         <div class="grow">

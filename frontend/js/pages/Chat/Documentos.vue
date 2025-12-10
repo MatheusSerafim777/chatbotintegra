@@ -1,14 +1,38 @@
 <script setup lang="ts">
-import { usePage, Form, Link } from '@inertiajs/vue3';
+import { usePage, useForm, router } from '@inertiajs/vue3';
 
 import Layout from '@/components/Layout.vue';
 import type { DjangoFormData } from "@/types/djangoForm";
 import type { Documento } from '@/types/index';
-import DjangoForm from '@/components/form/DjangoForm.vue'
 import { ref, watch } from 'vue';
+import FormField from '@/components/form/FormField.vue';
+
+const documentoParaExcluir = ref<Documento | null>(null);
+const modalExclusao = ref<HTMLDialogElement | null>(null);
+
+function abrirModalExclusao(documento: Documento) {
+    documentoParaExcluir.value = documento;
+    modalExclusao.value?.showModal();
+}
+
+function confirmarExclusao() {
+    if (documentoParaExcluir.value) {
+        const url = page.props['urls']['excluir_documento'].replace('%(id_documento)s', documentoParaExcluir.value.id.toString());
+        router.post(url);
+    }
+    modalExclusao.value?.close();
+    documentoParaExcluir.value = null;
+}
+
+function cancelarExclusao() {
+    modalExclusao.value?.close();
+    documentoParaExcluir.value = null;
+}
 
 
-const page = usePage();
+const page = usePage<{
+    urls: Record<string, string>,
+}>();
 const props = defineProps<{
     importar_documentos_form: DjangoFormData,
     documentos: Documento[];
@@ -66,6 +90,14 @@ async function atualizarStatusDocumentosPendentes() {
 }
 
 atualizarStatusDocumentosPendentes();
+
+const form = useForm({
+    documentos: [],
+})
+function submit() {
+    form.post(page.props['urls']['documentos']);
+}
+
 </script>
 
 <template>
@@ -81,9 +113,10 @@ atualizarStatusDocumentosPendentes();
                     <p class="font-bold text-2xl text-center">{{ qtdDocumentosPendentes }}</p>
                 </div>
                 <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300">
-                    <Form :action="page.props['urls']['documentos']" method="post" class="">
+                    <form @submit.prevent="submit" class="">
                         <div class="flex gap-2 items-center">
-                            <DjangoForm :form="importar_documentos_form" />
+                            <FormField :field="importar_documentos_form.fields[0]"
+                                @input="form.documentos = Array.from($event.target.files)" />
                             <button class="btn px-2 h-14 rounded">
                                 <i class="bi bi-plus-lg "></i>
                             </button>
@@ -94,7 +127,7 @@ atualizarStatusDocumentosPendentes();
                                 <option value="manual">Manual</option>
                             </select>
                         </div>
-                    </Form>
+                    </form>
                 </div>
             </div>
 
@@ -122,11 +155,9 @@ atualizarStatusDocumentosPendentes();
                                     <a :href="documento.arquivo.url" target="_blank">
                                         <i class="bi bi-eye-fill text-neutral"></i>
                                     </a>
-                                    <Link
-                                        :href="page.props['urls']['excluir_documento'].replace('%(id_documento)s', documento.id)"
-                                        method="post">
-                                    <i class="bi bi-trash3-fill text-error"></i>
-                                    </Link>
+                                    <button @click="abrirModalExclusao(documento)" class="cursor-pointer">
+                                        <i class="bi bi-trash3-fill text-error"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -134,6 +165,24 @@ atualizarStatusDocumentosPendentes();
                 </table>
 
             </div>
+
+            <!-- Modal de confirmação de exclusão -->
+            <dialog ref="modalExclusao" class="modal">
+                <div class="modal-box">
+                    <h3 class="font-bold text-lg">Confirmar exclusão</h3>
+                    <p class="py-4">
+                        Tem certeza que deseja excluir o documento
+                        <strong>{{ documentoParaExcluir?.nome }}</strong>?
+                    </p>
+                    <div class="modal-action">
+                        <button class="btn" @click="cancelarExclusao">Cancelar</button>
+                        <button class="btn btn-error" @click="confirmarExclusao">Excluir</button>
+                    </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button @click="cancelarExclusao">close</button>
+                </form>
+            </dialog>
         </div>
     </Layout>
 </template>

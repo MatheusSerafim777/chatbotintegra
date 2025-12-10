@@ -11,13 +11,13 @@ from django.db.models import (
 )
 from django.db.models.functions import Rank
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pgvector.django import CosineDistance
 
 from chat.functions import BM25Score, PdbQueryCast
-from chat.models import ChunkDocumeto, Documento, StatusDocumento
+from chat.models import ChunkDocumeto, Documento, Mensagem, StatusDocumento
 
 
 class Rag:
@@ -105,39 +105,6 @@ class Rag:
     def top_k_chunks(query: str, k: int = 5) -> list[str]:
         embedding_query = Rag.embedding.embed_query(query)
 
-        # bm25_search = '{"match": {"value": "{%s}"}}' % query
-        # qs = ChunkDocumeto.objects.raw(
-        #     f"""
-        #     WITH bm25_ranked AS (
-        #         SELECT id, RANK() OVER (ORDER BY score DESC) AS rank
-        #         FROM (
-        #         SELECT id, paradedb.score(id) AS score
-        #         FROM ia_chunkdocumeto
-        #         WHERE conteudo @@@ '{bm25_search}'::pdb.query
-        #         ORDER BY paradedb.score(id) DESC
-        #         LIMIT 20
-        #         ) AS bm25_score
-        #     ),
-        #     semantic_search AS (
-        #         SELECT id, RANK() OVER (ORDER BY embedding <=> '{embedding_query}') AS rank
-        #         FROM ia_chunkdocumeto
-        #         ORDER BY embedding <=> '{embedding_query}'
-        #         LIMIT 20
-        #     )
-        #     SELECT
-        #         COALESCE(semantic_search.id, bm25_ranked.id) AS id,
-        #         COALESCE(1.0 / (60 + semantic_search.rank), 0.0) +
-        #         COALESCE(1.0 / (60 + bm25_ranked.rank), 0.0) AS score,
-        #         ia_chunkdocumeto.conteudo,
-        #         ia_chunkdocumeto.embedding
-        #     FROM semantic_search
-        #     FULL OUTER JOIN bm25_ranked ON semantic_search.id = bm25_ranked.id
-        #     JOIN ia_chunkdocumeto ON ia_chunkdocumeto.id = COALESCE(semantic_search.id, bm25_ranked.id)
-        #     ORDER BY score DESC, conteudo
-        #     LIMIT 10;
-        # """  # noqa
-        # )
-
         ranked_by_bm25 = (
             ChunkDocumeto.objects.annotate(
                 score=BM25Score('id'),
@@ -145,7 +112,9 @@ class Rag:
             )
             .filter(
                 conteudo__bm25=PdbQueryCast(
-                    Value(f'{{"match": {{"value": "{query}"}}}}')
+                    Value(
+                        f'{{"match": {{"value": "{re.sub(r"\s+", " ", query).strip()}"}}}}'
+                    )
                 )
             )
             .order_by('-score')[:20]
@@ -162,8 +131,8 @@ class Rag:
         for chunk in ranked_by_semantic:
             agrupado[chunk.id].append(('semantic', chunk))
 
-        bm25_weight = 0.6
-        semantic_weight = 0.4
+        bm25_weight = 0.5
+        semantic_weight = 0.5
         combinado = []
 
         for chunks in agrupado.values():
@@ -184,7 +153,10 @@ class Rag:
         return [chunk.conteudo for chunk in qs]
 
     @staticmethod
-    def run(query: str) -> Generator[str, None, None]:
+    def run(
+        query: str,
+        mensagens: QuerySet[Mensagem],
+    ) -> Generator[str, None, None]:
         contexto = '\n\n\n'.join(Rag.top_k_chunks(query, k=10))
 
         mensagens = [
@@ -198,10 +170,16 @@ class Rag:
                     f'\n\n{contexto}\n\n'
                     '⚠️ Regras importantes:\n'
                     '- Se a resposta não estiver clara ou presente no contexto, responda exatamente: "Não tenho informações sobre isso".\n'
-                    '- Não invente, não faça suposições e não utiliz    e conhecimento externo ao contexto.\n'
+                    '- Não invente, não faça suposições e não utilize conhecimento externo ao contexto.\n'
                     '- Antes de responder, verifique cuidadosamente se a informação está no contexto.\n'
                 )
             ),
+            *[
+                HumanMessage(m.conteudo)
+                if m.tipo == Mensagem.OpcoesTipo.USUARIO
+                else AIMessage(m.conteudo)
+                for m in mensagens
+            ],
             HumanMessage(query),
         ]
 

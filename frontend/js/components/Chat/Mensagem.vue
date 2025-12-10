@@ -38,7 +38,7 @@ const mensagemSelecionada = computed(() => {
 const mensagemFilhaRef = ref<typeof Mensagem | null>(null);
 
 function obterIdUltimaMensagem(): number {
-    if (mensagemSelecionada.value.mensagensFilhas.length === 0) return mensagemSelecionada.value.id;
+    if (mensagemSelecionada.value.mensagens_filhas.length === 0) return mensagemSelecionada.value.id;
     return mensagemFilhaRef.value?.obterIdUltimaMensagem() || mensagemSelecionada.value.id;
 }
 
@@ -54,16 +54,16 @@ defineExpose({
     </div>
 
     <template v-else>
-        <MensagemBot v-if="mensagemSelecionada.tipo === 'bot'" :mensagem="mensagemSelecionada"
+        <MensagemBot v-if="mensagemSelecionada.tipo === 'ASSISTENTE'" :mensagem="mensagemSelecionada"
             :index-mensagem-selecionada="indexMensagemSelecionada" :max-mensagem-selecionada="ids.length - 1"
             :setIndexMensagemSelecionada="setIndexMensagemSelecionada" />
 
-        <MensagemUsuario v-else-if="mensagemSelecionada.tipo === 'usuario'" :mensagem="mensagemSelecionada"
+        <MensagemUsuario v-else-if="mensagemSelecionada.tipo === 'USUARIO'" :mensagem="mensagemSelecionada"
             :index-mensagem-selecionada="indexMensagemSelecionada" :max-mensagem-selecionada="ids.length - 1"
             :setIndexMensagemSelecionada="setIndexMensagemSelecionada" />
 
         <!-- Recursão -->
-        <Mensagem ref="mensagemFilhaRef" v-if="mensagemSelecionada.mensagensFilhas.length" :map-mensagens="mapMensagens"
-            :ids="mensagemSelecionada.mensagensFilhas" />
+        <Mensagem ref="mensagemFilhaRef" v-if="mensagemSelecionada.mensagens_filhas.length"
+            :map-mensagens="mapMensagens" :ids="mensagemSelecionada.mensagens_filhas" />
     </template>
 </template>
