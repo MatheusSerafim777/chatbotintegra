@@ -10,6 +10,7 @@ export type Documento = {
     nome: string;
     arquivo: FileField;
     status: 'pendente' | 'processado' | 'processado';
+    tipo_documento: 'legislacao' | 'manual';
 }
 
 export type PerguntaCanonica = {

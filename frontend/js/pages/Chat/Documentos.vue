@@ -81,11 +81,19 @@ atualizarStatusDocumentosPendentes();
                     <p class="font-bold text-2xl text-center">{{ qtdDocumentosPendentes }}</p>
                 </div>
                 <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300">
-                    <Form :action="page.props['urls']['documentos']" method="post" class="flex gap-2 items-center">
-                        <DjangoForm :form="importar_documentos_form" />
-                        <button class="btn px-2 h-14 rounded">
-                            <i class="bi bi-plus-lg "></i>
-                        </button>
+                    <Form :action="page.props['urls']['documentos']" method="post" class="">
+                        <div class="flex gap-2 items-center">
+                            <DjangoForm :form="importar_documentos_form" />
+                            <button class="btn px-2 h-14 rounded">
+                                <i class="bi bi-plus-lg "></i>
+                            </button>
+                        </div>
+                        <div class="mt-3">
+                            <select name="tipDoc" id="tioDoc" class="select">
+                                <option value="legislacao">Legislacao</option>
+                                <option value="manual">Manual</option>
+                            </select>
+                        </div>
                     </Form>
                 </div>
             </div>
@@ -98,6 +106,7 @@ atualizarStatusDocumentosPendentes();
                             <th>ID</th>
                             <th>Documento</th>
                             <th>Status</th>
+                            <th>Tipo do Documento</th>
                             <th class="w-0 whitespace-nowrap">Ações</th>
                         </tr>
                     </thead>
@@ -107,6 +116,7 @@ atualizarStatusDocumentosPendentes();
                             <td>{{ documento.id }}</td>
                             <td>{{ documento.nome }}</td>
                             <td>{{ documento.status }}</td>
+                            <td>{{ documento.tipo_documento }}</td>
                             <td class="w-0 whitespace-nowrap">
                                 <div class="flex gap-2 justify-center">
                                     <a :href="documento.arquivo.url" target="_blank">
