@@ -34,10 +34,7 @@ const handleRespostaUpdate = (value: any) => {
 watch(pergunta, v => form.fields[0].value = v);
 watch(resposta, v => form.fields[1].value = v);
 
-
 </script>
-
-
 
 <template>
     <Layout>

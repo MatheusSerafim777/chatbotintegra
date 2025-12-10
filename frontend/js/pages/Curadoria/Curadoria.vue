@@ -27,14 +27,14 @@ const props = defineProps<{
                     <div class="collapse-title font-semibold flex justify-between p-4">
                         <span>{{ pergunta.pergunta }}</span>
                     </div>
-                    <div class="collapse-content text-sm flex justify-between">{{ pergunta.resposta }}
-                        <div class="flex gap-4 ml-4">
-
+                    <div class="collapse-content text-sm flex justify-between ">{{ pergunta.resposta }}
+                        <div class="flex gap-4 ml-4 items-center">
+    
                             <Link method="post"
                                 :href="page.props['urls']['excluir_canonica'].replace('%(id_canonica)s', pergunta.id.toString())">
                                 <i class="bi bi-trash3-fill text-error"></i>
                             </Link>
-
+    
                             <Link method="get"
                                 :href="page.props.urls.editar_canonica.replace('%(id_canonica)s', pergunta.id.toString())">
                                 <i class="bi bi-pencil"></i>
