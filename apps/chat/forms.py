@@ -33,6 +33,10 @@ class ImportarDocumentosForm(forms.Form):
         validators=[validators.FileExtensionValidator(['pdf'])],
     )
 
+    tipo = forms.ChoiceField(
+        choices=Documento.Tipo.choices,
+    )
+
     def __init__(self, *args, **kwargs):
         kwargs['use_required_attribute'] = False
         super().__init__(*args, **kwargs)

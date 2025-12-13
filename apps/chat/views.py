@@ -1,3 +1,4 @@
+import json
 import re
 
 from django.contrib.auth.decorators import login_required
@@ -97,14 +98,16 @@ class DocumentosView(View):
         return render(request, self.template_name, context)
 
     def post(self, request: HttpRequest):
-        dados = {
+        dados = json.loads(request.body)
+        print(request.body)
+        arquivos =  {
             'documentos': [
                 doc
                 for name, doc in request.FILES.items()
                 if re.compile(r'^documentos\[\d+\]$').match(name)
             ]
         }
-        form = self.form_class({}, dados)
+        form = self.form_class(dados, arquivos)
         if not form.is_valid():
             return self.get(request, {'importar_documentos_form': form})
 

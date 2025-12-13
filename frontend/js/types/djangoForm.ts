@@ -11,6 +11,7 @@ export type FormField = {
     required: boolean;
     disabled: boolean;
     hidden: boolean;
+    choices: [string, string][];
 }
 
 export type DjangoFormData = {

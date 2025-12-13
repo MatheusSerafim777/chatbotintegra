@@ -1,6 +1,5 @@
-from django import forms
-
 from chat.models import RespostaCanonica
+from django import forms
 
 
 class RespostaCanonicaForm(forms.ModelForm):

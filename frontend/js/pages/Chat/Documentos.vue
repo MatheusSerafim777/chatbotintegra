@@ -93,6 +93,7 @@ atualizarStatusDocumentosPendentes();
 
 const form = useForm({
     documentos: [],
+    tipo: '',
 })
 function submit() {
     form.post(page.props['urls']['documentos']);
@@ -115,17 +116,15 @@ function submit() {
                 <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300">
                     <form @submit.prevent="submit" class="">
                         <div class="flex gap-2 items-center">
-                            <FormField :field="importar_documentos_form.fields[0]"
-                                @input="form.documentos = Array.from($event.target.files)" />
+                            <div>
+                                <FormField :field="importar_documentos_form.fields[0]"
+                                    @input="form.documentos = Array.from($event.target.files)" />
+
+                                <FormField :field="importar_documentos_form.fields[1]" @input="form.tipo = $event.target.value" />
+                            </div>
                             <button class="btn px-2 h-14 rounded">
                                 <i class="bi bi-plus-lg "></i>
                             </button>
-                        </div>
-                        <div class="mt-3">
-                            <select name="tipDoc" id="tioDoc" class="select">
-                                <option value="legislacao">Legislacao</option>
-                                <option value="manual">Manual</option>
-                            </select>
                         </div>
                     </form>
                 </div>

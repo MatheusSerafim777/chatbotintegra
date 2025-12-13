@@ -4,6 +4,7 @@ import type { FormField } from "@/types/djangoForm";
 import InputBase from "./inputs/InputBase.vue";
 import InputWithIcon from "./inputs/InputWithIcon.vue";
 import TextareaField from "./inputs/TextareaField.vue";
+import SelectInput from "./inputs/SelectInput.vue";
 
 const props = defineProps<{ field: FormField }>();
 
@@ -26,12 +27,15 @@ const hasIcon = !!props.field.widget_attrs.icon;
 
         <InputWithIcon v-if="hasIcon" :field="field" />
 
+        <SelectInput v-else-if="field.widget_type === 'Select'" :field="field" />
+
         <TextareaField v-else-if="isTextarea" :field="field" />
 
         <InputBase v-else :field="field" />
 
         <label class="label text-error" v-if="field.errors.length">
-            <span class="label-text-alt whitespace-pre-wrap wrap-break-word" v-for="(error, i) in field.errors" :key="i">
+            <span class="label-text-alt whitespace-pre-wrap wrap-break-word" v-for="(error, i) in field.errors"
+                :key="i">
                 {{ error }}
             </span>
         </label>

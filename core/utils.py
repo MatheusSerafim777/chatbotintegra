@@ -20,6 +20,10 @@ class CustomJsonEncoder(InertiaJsonEncoder):
             else:
                 value = str(raw_value)
 
+            choices = []
+            if hasattr(field, 'choices'):
+                choices = field.choices
+
             fields.append({
                 'name': bound_field.name,
                 'label': bound_field.label or '',
@@ -35,6 +39,7 @@ class CustomJsonEncoder(InertiaJsonEncoder):
                 'required': field.required,
                 'disabled': field.disabled,
                 'hidden': widget.is_hidden,
+                'choices': choices,
             })
 
         return {

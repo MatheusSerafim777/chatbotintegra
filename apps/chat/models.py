@@ -1,7 +1,4 @@
 from __future__ import annotations
-from tokenize import blank_re
-
-from sqlalchemy import true
 
 from contas.models import Usuario
 from django.core.validators import FileExtensionValidator
@@ -26,6 +23,10 @@ class StatusDocumento(models.TextChoices):
 
 
 class Documento(models.Model):
+    class Tipo(models.TextChoices):
+        MANUAL = 'manual', 'Manual'
+        LEGISLACAO = 'legislacao', 'Legislação'
+
     nome = models.CharField(max_length=255, blank=True)
     arquivo = models.FileField(
         upload_to='documentos/',
