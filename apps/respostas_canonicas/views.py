@@ -1,5 +1,7 @@
 import json
 
+from django.test.signals import template_rendered
+
 from chat.models import RespostaCanonica
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest
@@ -13,7 +15,7 @@ from respostas_canonicas.forms import RespostaCanonicaForm
 
 
 @method_decorator(login_required, name='dispatch')
-class CuradoriaView(View):
+class RespostasCanonicasView(View):
     def get(self, request: HttpRequest):
         respostas_canonicas = RespostaCanonica.objects.all().order_by('id')
         context = {
@@ -24,17 +26,33 @@ class CuradoriaView(View):
 
 @method_decorator(login_required, name='dispatch')
 class CadastrarCanonicaView(View):
+    template_name = 'Curadoria/RespostaCanonicaForm'
     form_class = RespostaCanonicaForm
 
-    def get(self, request: HttpRequest):
-        context = {'form': self.form_class(), 'titulo': 'Cadastrar Canônica'}
-        return render(request, 'Curadoria/CadastrarCanonica', context)
+    def get_context_data(self, form: RespostaCanonicaForm):
+        return {
+            'form': form,
+            'action_url': reverse('cadastro_canonica'),
+            'titulo': 'Cadastrar Canônica',
+            'button_text': 'Salvar',
+        }
 
+    def get(self, request: HttpRequest):
+        return render(
+            request,
+            self.template_name,
+            self.get_context_data(self.form_class()),
+        )
     def post(self, request: HttpRequest):
         form = self.form_class(json.loads(request.body))
+        
         if not form.is_valid():
-            context = {'form': form}
-            return render(request, 'Curadoria/CadastrarCanonica', context)
+            return render(
+                request,
+                self.template_name,
+                self.get_context_data(self.form_class()),
+            )
+        
         form.save()
         return redirect('curadoria')
 
@@ -47,41 +65,39 @@ class ExcluirCanonicaView(View):
 
 
 class EditarCanonicaView(View):
+    template_name = 'Curadoria/RespostaCanonicaForm'
+    form_class = RespostaCanonicaForm
+
+    def get_context_data(self, form: RespostaCanonicaForm):
+        return {
+            'form': form,
+            'action_url': reverse('editar_canonica', args=[form.instance.id]),
+            'titulo': 'Editar Canônica',
+            'button_text': 'Salvar Alterações',
+        }
+    
     def get(self, request, id_canonica):
         canonica = get_object_or_404(RespostaCanonica, id=id_canonica)
         form = RespostaCanonicaForm(instance=canonica)
 
         return render(
             request,
-            'Curadoria/EditarCanonica',
-            {
-                'form': form,
-                'urls': {
-                    'curadoria': reverse('curadoria'),
-                    'editar': reverse('editar_canonica', args=[id_canonica]),
-                },
-            },
+            self.template_name,
+            self.get_context_data(form)
         )
 
     def post(self, request: HttpRequest, id_canonica):
         canonica = get_object_or_404(RespostaCanonica, id=id_canonica)
         form = RespostaCanonicaForm(
-            json.loads(request.body), instance=canonica
+            json.loads(request.body),
+            instance=canonica,
         )
 
         if not form.is_valid():
             return render(
                 request,
-                'Curadoria/EditarCanonica',
-                {
-                    'form': form,
-                    'urls': {
-                        'curadoria': reverse('curadoria'),
-                        'editar': reverse(
-                            'editar_canonica', args=[id_canonica]
-                        ),
-                    },
-                },
+                self.template_name,
+                self.get_context_data(form)
             )
 
         form.save()
