@@ -26,7 +26,10 @@ USE_HTTPS_IN_ABSOLUTE_URLS = True
 ALLOWED_HOSTS = [
     '*',
 ]
-CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = [
+    'https://chatbotintegracar.online',
+    'https://www.chatbotintegracar.online',
+]
 
 LOG_DIR = BASE_DIR / 'logs'  # noqa: F405
 LOG_DIR.mkdir(exist_ok=True)
