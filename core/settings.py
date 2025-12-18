@@ -202,5 +202,3 @@ Q_CLUSTER = {
     'max_attempts': 1,
     'orm': 'default',
 }
-
-

@@ -41,7 +41,6 @@ const mensagensRaiz = computed<number[]>(
 
 watch(
     idConversa, (novoIdConversa, antigoIdConversa) => {
-        console.log('ID da conversa mudou de', antigoIdConversa, 'para', novoIdConversa);
         if (novoIdConversa !== antigoIdConversa) {
             if (novoIdConversa == null) {
                 router.visit('/', { replace: true, preserveState: true });
@@ -62,7 +61,6 @@ const enviarMensagem = async () => {
     if (!pergunta.value.trim()) return;
 
     const mensagemPaiSelecionada: number | null = mensagensRaiz.value.length > 0 ? mensagemRef.value?.obterIdUltimaMensagem() : null;
-    console.log('Mensagem pai selecionada:', mensagemPaiSelecionada);
     const mensagemUsuario: TMensagem = {
         id: Date.now() + Math.random(),
         tipo: 'USUARIO',
@@ -102,7 +100,7 @@ const enviarMensagem = async () => {
         id_mensagem_pai: mensagemPaiSelecionada,
         id_conversa: idConversa.value,
     };
-    console.log('Payload enviado:', payload);
+
     const response = await fetch('/api/chat', {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -119,6 +117,7 @@ const enviarMensagem = async () => {
     let idMensagemBot = botMessage.id;
     while (true) {
         const { value, done } = await reader.read();
+
         if (done) break;
         if (primeiro) {
             primeiro = false;
@@ -159,7 +158,7 @@ const enviarMensagem = async () => {
 
             continue;
         }
-        mapMensagens.value[idMensagemBot].conteudo += decoder.decode(value); //input de escrita
+        mapMensagens.value[idMensagemBot].conteudo += decoder.decode(value);  // input de escrita
         scrollParaUltimaMensagem();
     };
 }
@@ -176,7 +175,7 @@ function scrollParaUltimaMensagem(smooth = true) {
     if (div) {
         div.scrollTo({
             top: div.scrollHeight,
-            behavior: smooth? 'smooth' : 'auto',
+            behavior: smooth ? 'smooth' : 'auto',
         })
     }
 }

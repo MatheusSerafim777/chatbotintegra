@@ -1,7 +1,5 @@
 import json
 
-from django.test.signals import template_rendered
-
 from chat.models import RespostaCanonica
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest
@@ -43,16 +41,17 @@ class CadastrarCanonicaView(View):
             self.template_name,
             self.get_context_data(self.form_class()),
         )
+
     def post(self, request: HttpRequest):
         form = self.form_class(json.loads(request.body))
-        
+
         if not form.is_valid():
             return render(
                 request,
                 self.template_name,
                 self.get_context_data(self.form_class()),
             )
-        
+
         form.save()
         return redirect('curadoria')
 
@@ -75,16 +74,12 @@ class EditarCanonicaView(View):
             'titulo': 'Editar Canônica',
             'button_text': 'Salvar Alterações',
         }
-    
+
     def get(self, request, id_canonica):
         canonica = get_object_or_404(RespostaCanonica, id=id_canonica)
         form = RespostaCanonicaForm(instance=canonica)
 
-        return render(
-            request,
-            self.template_name,
-            self.get_context_data(form)
-        )
+        return render(request, self.template_name, self.get_context_data(form))
 
     def post(self, request: HttpRequest, id_canonica):
         canonica = get_object_or_404(RespostaCanonica, id=id_canonica)
@@ -95,9 +90,7 @@ class EditarCanonicaView(View):
 
         if not form.is_valid():
             return render(
-                request,
-                self.template_name,
-                self.get_context_data(form)
+                request, self.template_name, self.get_context_data(form)
             )
 
         form.save()
