@@ -16,21 +16,21 @@ services:
     networks:
       - app-network
 
-  # qcluster:
-  #   build:
-  #     context: .
-  #     dockerfile: prod.Dockerfile
-  #   volumes:
-  #     - app_shared:/code/media
-  #   env_file:
-  #     - ./.env
-  #   command: python manage.py qcluster
-  #   restart: unless-stopped
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #   networks:
-  #     - app-network
+  qcluster:
+    build:
+      context: .
+      dockerfile: prod.Dockerfile
+    volumes:
+      - app_shared:/code/media
+    env_file:
+      - ./.env
+    command: python manage.py qcluster
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
 
   db:
     image: paradedb/paradedb
