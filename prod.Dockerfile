@@ -28,6 +28,8 @@ FROM python:3.12-slim-bookworm
 ENV PATH="/code/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV DEBUG=0
+ENV DJANGO_SETTINGS_MODULE=core.settings_production
+
 
 RUN apt-get update \
     && apt-get install -y \
@@ -46,8 +48,10 @@ COPY --from=node-builder /code/static /code/static
 WORKDIR /code
 COPY --chown=django:django . /code
 
-RUN DEBUG=False python ./manage.py collectstatic --noinput --settings=core.settings_production
-RUN chown django:django -R static
+RUN DEBUG=False python ./manage.py collectstatic --noinput
+
+RUN mkdir -p media logs
+RUN chown -R django:django media logs static
 
 USER django
 
