@@ -2,6 +2,7 @@
 import { ref, nextTick, computed, watch, onMounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import Mensagem from './Mensagem.vue';
+import { Usuario } from '@/types/index';
 
 export type TMensagem = {
     id: number;
@@ -22,7 +23,11 @@ type chatResponse = {
     id_mensagem_resposta: number;
 }
 
-const page = usePage<{ map_mensagens: MapMensagens, id_conversa: number }>();
+const page = usePage<{
+    map_mensagens: MapMensagens,
+    id_conversa: number,
+    usuario: Usuario | null,
+}>();
 
 const mapMensagens = ref<MapMensagens>(page.props.map_mensagens ?? {});
 
@@ -44,7 +49,7 @@ watch(
         if (novoIdConversa !== antigoIdConversa) {
             if (novoIdConversa == null) {
                 router.visit('/', { replace: true, preserveState: true });
-            } else {
+            } else if (page.props.usuario?.id) {
                 router.visit(`/c/${novoIdConversa}/`, { replace: true, preserveState: true });
             }
         }
