@@ -18,7 +18,6 @@ export type Usuario = {
     name: string;
     email: string;
     is_staff: boolean;
-    is_superuser: boolean;
 }
 
 export type Conversa = {

@@ -71,6 +71,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     class InertiaMeta:
         fields = (
+            'id',
             'email',
             'name',
+            'is_staff',
         )
