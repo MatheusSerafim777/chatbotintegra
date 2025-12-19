@@ -31,12 +31,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: GITHUB_TOKEN
           script: |
             set -e
             cd chatbot
-            git pull https://${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-            sudo -S docker compose -f docker-compose.prod.yaml down
-            sudo -S docker compose -f docker-compose.prod.yaml up --build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+            git pull
+            sudo docker compose -f docker-compose.prod.yaml down
+            sudo docker compose -f docker-compose.prod.yaml up --build  
