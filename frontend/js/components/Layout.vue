@@ -90,7 +90,7 @@ const cancelarExclusao = () => {
                         <span class="is-drawer-close:hidden">Nova Conversa</span>
                         </Link>
                     </li>
-                    <li>
+                    <li v-if="page.props.user.is_staff">
                         <Link :href="page.props.urls['documentos']"
                             class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg"
                             :class="{ 'bg-accent': isActive(page.props.urls['documentos']) }" data-tip="Documentos">
@@ -98,7 +98,7 @@ const cancelarExclusao = () => {
                         <span class="is-drawer-close:hidden">Documentos</span>
                         </Link>
                     </li>
-                    <li>
+                    <li v-if="page.props.user.is_staff">
                         <Link :href="page.props.urls['curadoria']"
                             class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg"
                             :class="{ 'bg-accent': isActive(page.props.urls['curadoria']) }" data-tip="Curadoria">
