@@ -7,7 +7,17 @@ set -o nounset
 PORT=${PORT:-8000}
 
 echo "Running migrations..."
-python ./manage.py migrate --noinput
+python manage.py migrate --noinput
+
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
 
 echo "Starting Gunicorn..."
-gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 8 --timeout 0 core.wsgi
+gunicorn core.wsgi \
+  --bind 0.0.0.0:$PORT \
+  --workers 2 \
+  --threads 8 \
+  --timeout 0 \
+  --log-level debug \
+  --access-logfile - \
+  --error-logfile -

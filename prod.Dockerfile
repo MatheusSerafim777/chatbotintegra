@@ -2,55 +2,50 @@
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS python-builder
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 WORKDIR /code
+
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --no-install-project --no-dev
+
 ADD . /code
+
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-dev
 
+
 # Stage 2: Build the frontend files
 FROM node:23-bookworm-slim AS node-builder
-RUN nodejs -v && npm -v
 WORKDIR /code
-COPY . /code
-RUN mkdir -p /code/static
+
+COPY package.json package-lock.json* ./
 RUN npm install
+
+COPY . .
 RUN npm run build
 
-# Stage 3: Use the final image without uv
-# It is important to use the image that matches the python-builder, as the path to the
-# Python executable must be the same, e.g., using `python:3.11-slim-bookworm`
-# will fail.
+
+# Stage 3: Final image
 FROM python:3.12-slim-bookworm
 
-# Place executables in the environment at the front of the path
 ENV PATH="/code/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV DEBUG=0
+ENV DJANGO_SETTINGS_MODULE=core.settings_production
 
 RUN apt-get update \
-    && apt-get install -y \
-    curl \
-    libpq-dev \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && apt-get install -y curl libpq-dev \
+    && apt-get purge -y --auto-remove \
     && rm -rf /var/lib/apt/lists/*
 
-RUN addgroup --system django \
-    && adduser --system --ingroup django django
-
-# Copy the application from the builders
-COPY --from=python-builder /code /code
-COPY --from=node-builder /code/static /code/static
-
 WORKDIR /code
-COPY --chown=django:django . /code
 
-RUN DEBUG=False python ./manage.py collectstatic --noinput --settings=core.settings_production
-RUN chown django:django -R static
+COPY --from=python-builder /code /code
+COPY --from=node-builder /code/frontend/dist /code/frontend/dist
+COPY . /code
 
-USER django
+RUN mkdir -p media logs static
 
-COPY --chown=django:django docker_startup.sh /start
+COPY docker_startup.sh /start
 RUN chmod +x /start
-CMD /start
+
+CMD ["/start"]

@@ -51,7 +51,7 @@ extend-exclude = ["migrations", "postgres_data", "frontend"]
 [tool.ruff.lint]
 preview = true
 select = ["A", "B", "C", "E", "F", "I", "PL", "PT", "Q", "S", "T", "W", "DJ"]
-ignore = ["E501", "PLR6301"]
+ignore = ["E501", "PLR6301", "W191"]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "single"

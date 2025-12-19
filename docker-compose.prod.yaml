@@ -1,0 +1,90 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: prod.Dockerfile
+    volumes:
+      - app_shared:/code/media
+      - static_volume:/code/static
+    env_file:
+      - ./.env
+    command: /start
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  qcluster:
+    build:
+      context: .
+      dockerfile: prod.Dockerfile
+    volumes:
+      - app_shared:/code/media
+    env_file:
+      - ./.env
+    command: python manage.py qcluster
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  db:
+    image: paradedb/paradedb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: chatbot-integracar
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - app-network
+    healthcheck:
+      test: pg_isready -d chatbot-integracar -U postgres
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+      - static_volume:/code/static:ro
+      - app_shared:/code/media:ro
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+    depends_on:
+      - web
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+    command: certonly --webroot
+      -w /var/www/certbot
+      --email evandro.rsneto@gmail.com
+      --agree-tos
+      --no-eff-email
+      -d chatbotintegracar.online
+      -d www.chatbotintegracar.online
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  app_shared:
+  postgres_data:
+  static_volume:
+  certbot_www:
+  certbot_conf:

@@ -52,7 +52,7 @@ services:
             - node_modules/
         - action: rebuild
           path: ./pyproject.toml
-          
+
   vite:
     build:
       context: .

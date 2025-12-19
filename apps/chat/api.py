@@ -46,12 +46,12 @@ def chat_endpoint(request: HttpRequest, payload: ChatSchema):
         if payload.id_conversa:
             conversa = Conversa.objects.select_for_update().get(
                 id=payload.id_conversa,
-                usuario=request.user,
+                usuario=request.user if request.user.is_authenticated else None,
             )
         else:
             tamanho_maximo = 20
             conversa = Conversa.objects.create(
-                usuario=request.user,
+                usuario=request.user if request.user.is_authenticated else None,
                 nome=mensagem[:tamanho_maximo] + '...'
                 if len(mensagem) > tamanho_maximo
                 else mensagem,

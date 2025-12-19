@@ -150,7 +150,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_URL = '/media/'
@@ -170,13 +170,11 @@ DJANGO_VITE = {
 }
 # Where ViteJS assets are built.
 DJANGO_VITE_ASSETS_PATH = BASE_DIR / 'frontend' / 'dist'
-# Include DJANGO_VITE_ASSETS_PATH into STATICFILES_DIRS to be copied inside
-# when run command python manage.py collectstatic
-STATICFILES_DIRS = [DJANGO_VITE_ASSETS_PATH]
+STATICFILES_DIRS = [DJANGO_VITE_ASSETS_PATH, BASE_DIR / 'frontend' / 'static']
 
 INERTIA_LAYOUT = 'base.html'
 INERTIA_SSR_URL = inertia_settings.INERTIA_SSR_URL
-INERTIA_SSR_ENABLED = inertia_settings.INERTIA_SSR_ENABLED
+INERTIA_SSR_ENABLED = True
 INERTIA_JSON_ENCODER = CustomJsonEncoder
 
 # Default primary key field type
@@ -193,12 +191,11 @@ def immutable_file_test(path, url):
 
 WHITENOISE_IMMUTABLE_FILE_TEST = immutable_file_test
 
-
 OPENAI_API_KEY = env.str('OPENAI_API_KEY', default='')
 
 Q_CLUSTER = {
     'name': 'chatbot-integracar',
-    'workers': 1,
+    'workers': 2,
     'timeout': 100,
     'retry': 120,
     'queue_limit': 50,
