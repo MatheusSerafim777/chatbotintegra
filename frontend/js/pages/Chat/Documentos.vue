@@ -104,14 +104,14 @@ function submit() {
 <template>
     <Layout>
         <div class="max-w-3xl mx-auto space-y-4 p-4">
-            <div class="flex gap-4">
-                <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300">
-                    <p class="label text-center">Documentos processados</p>
-                    <p class="font-bold text-2xl text-center">{{ qtdDocumentosProcessados }}</p>
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300 flex flex-col items-center justify-center">
+                    <p class="label">Documentos processados</p>
+                    <p class="font-bold text-2xl">{{ qtdDocumentosProcessados }}</p>
                 </div>
-                <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300">
-                    <p class="label text-center">Documentos pendentes</p>
-                    <p class="font-bold text-2xl text-center">{{ qtdDocumentosPendentes }}</p>
+                <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300 flex flex-col items-center justify-center">
+                    <p class="label">Documentos pendentes</p>
+                    <p class="font-bold text-2xl">{{ qtdDocumentosPendentes }}</p>
                 </div>
                 <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300">
                     <form @submit.prevent="submit" class="">
@@ -120,7 +120,7 @@ function submit() {
                                 <FormField :field="importar_documentos_form.fields[0]"
                                     @input="form.documentos = Array.from($event.target.files)" />
 
-                                <FormField :field="importar_documentos_form.fields[1]" @input="form.tipo = $event.target.value" />
+                                <!-- <FormField :field="importar_documentos_form.fields[1]" @input="form.tipo = $event.target.value" /> -->
                             </div>
                             <button class="btn px-2 h-14 rounded">
                                 <i class="bi bi-plus-lg "></i>

@@ -26,7 +26,7 @@ type chatResponse = {
 const page = usePage<{
     map_mensagens: MapMensagens,
     id_conversa: number,
-    usuario: Usuario | null,
+    user: Usuario | null,
 }>();
 
 const mapMensagens = ref<MapMensagens>(page.props.map_mensagens ?? {});
@@ -46,10 +46,11 @@ const mensagensRaiz = computed<number[]>(
 
 watch(
     idConversa, (novoIdConversa, antigoIdConversa) => {
+        console.log(page.props)
         if (novoIdConversa !== antigoIdConversa) {
-            if (novoIdConversa == null) {
+            if (novoIdConversa == null) { 
                 router.visit('/', { replace: true, preserveState: true });
-            } else if (page.props.usuario?.id) {
+            } else if (page.props.user) {
                 router.visit(`/c/${novoIdConversa}/`, { replace: true, preserveState: true });
             }
         }

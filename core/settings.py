@@ -193,6 +193,10 @@ WHITENOISE_IMMUTABLE_FILE_TEST = immutable_file_test
 
 OPENAI_API_KEY = env.str('OPENAI_API_KEY', default='')
 
+# Upload limits
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+
 Q_CLUSTER = {
     'name': 'chatbot-integracar',
     'workers': 2,
