@@ -99,8 +99,7 @@ class DocumentosView(View):
 
     def post(self, request: HttpRequest):
         dados = json.loads(request.body)
-        print(request.body)
-        arquivos =  {
+        arquivos = {
             'documentos': [
                 doc
                 for name, doc in request.FILES.items()
