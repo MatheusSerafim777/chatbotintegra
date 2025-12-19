@@ -34,4 +34,6 @@ jobs:
           script: |
             set -e
             cd chatbot
-            sudo -H bash -lc "git pull && docker compose -f docker-compose.prod.yaml down && docker compose -f docker-compose.prod.yaml up --build"
+            git pull
+            sudo docker compose -f docker-compose.prod.yaml down
+            sudo docker compose -f docker-compose.prod.yaml up --build  
