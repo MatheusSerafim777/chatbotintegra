@@ -105,11 +105,19 @@ class DocumentosView(View):
                 if re.compile(r'^documentos\[\d+\]$').match(name)
             ]
         }
+        
+        # Extrair os tipos de documentos do POST
+        tipos = {}
+        for key, value in request.POST.items():
+            match = re.compile(r'^tipos\[(\d+)\]$').match(key)
+            if match:
+                tipos[match.group(1)] = value
+        
         form = self.form_class({}, arquivos)
         if not form.is_valid():
             return self.get(request, {'importar_documentos_form': form})
 
-        form.save()
+        form.save(tipos=tipos)
 
         return redirect('documentos')
 

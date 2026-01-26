@@ -84,7 +84,7 @@ const cancelarExclusao = () => {
                     <div class="h-14"></div>
                     <li>
                         <Link :href="page.props.urls['index']"
-                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg"
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg text-nowrap"
                             :class="{ 'bg-accent': isActive(page.props.urls['index']) }" data-tip="Nova Conversa">
                         <i class="bi bi-pencil-square"></i>
                         <span class="is-drawer-close:hidden">Nova Conversa</span>
@@ -92,7 +92,7 @@ const cancelarExclusao = () => {
                     </li>
                     <li v-if="page.props.user.is_staff">
                         <Link :href="page.props.urls['documentos']"
-                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg"
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg text-nowrap"
                             :class="{ 'bg-accent': isActive(page.props.urls['documentos']) }" data-tip="Documentos">
                         <i class="bi bi-file-earmark-text"></i>
                         <span class="is-drawer-close:hidden">Documentos</span>
@@ -100,7 +100,7 @@ const cancelarExclusao = () => {
                     </li>
                     <li v-if="page.props.user.is_staff">
                         <Link :href="page.props.urls['curadoria']"
-                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg"
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg text-nowrap"
                             :class="{ 'bg-accent': isActive(page.props.urls['curadoria']) }" data-tip="Curadoria">
                         <i class="bi bi-robot"></i>
                         <span class="is-drawer-close:hidden">Curadoria</span>
@@ -111,7 +111,7 @@ const cancelarExclusao = () => {
 
                     <li v-for="conversa in page.props.conversas" :key="conversa.id">
                         <Link :href="page.props.urls['conversa'].replace('%(id_conversa)s', conversa.id.toString())"
-                            class="is-drawer-close:hidden hover:bg-secondary rounded-lg flex justify-between group"
+                            class="is-drawer-close:hidden hover:bg-secondary rounded-lg flex justify-between group text-nowrap"
                             :class="{ 'bg-accent': isActive(page.props.urls['conversa'].replace('%(id_conversa)s', conversa.id.toString())) }">
                         <span>{{ conversa.nome }}</span>
                         <button @click="abrirModalExcluir(conversa, $event)"
@@ -126,7 +126,7 @@ const cancelarExclusao = () => {
                     <li>
                         <div class="dropdown dropdown-top  is-drawer-close:dropdown-start dropdown-center p-0 is-drawer-close:tooltip is-drawer-close:tooltip-right"
                             role="button">
-                            <div tabindex="0" role="button" class="btn btn-accent w-full">
+                            <div tabindex="0" role="button" class="btn btn-accent w-full text-nowrap">
                                 <i class="bi bi-person-circle"></i>
                                 <span class="is-drawer-close:hidden">{{ page.props.user.name }}</span>
                             </div>

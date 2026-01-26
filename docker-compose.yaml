@@ -78,7 +78,7 @@ services:
             - .venv/
         - action: rebuild
           path: ./package.json
-  
+
   db:
     image: paradedb/paradedb
     volumes:
@@ -98,7 +98,6 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin
     restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
@@ -111,6 +110,14 @@ services:
       - app-network
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+
+  redeneuralbert:
+    image: integracar/redeneuralbert:8.0
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+    networks:
+      - app-network
 
 networks:
   app-network:

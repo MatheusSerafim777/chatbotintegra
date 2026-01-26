@@ -10,6 +10,7 @@ from django.db.models import (
     Window,
 )
 from django.db.models.functions import Rank
+import httpx
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -18,6 +19,12 @@ from pgvector.django import CosineDistance
 
 from chat.functions import BM25Score, PdbQueryCast
 from chat.models import ChunkDocumeto, Documento, Mensagem, StatusDocumento
+from typing import TypedDict, Literal
+
+
+class ClassificacaoResponse(TypedDict):
+    classe: Literal["Manual", "Legislação"]
+    confianca: float
 
 
 class Rag:
@@ -37,6 +44,12 @@ class Rag:
         chunk_size=1000,
         chunk_overlap=200,
     )
+
+    MAPA_CLASSE_API_PARA_MODEL = {
+        "Manual": Documento.Tipo.MANUAL,
+        "Legislação": Documento.Tipo.LEGISLACAO,
+    }
+
 
     @staticmethod
     def extrair_e_salvar_conteudo(id_documento: int) -> None:
@@ -117,13 +130,30 @@ class Rag:
                     )
                 )
             )
-            .order_by('-score')[:20]
+            .order_by('-score')
         )
 
         ranked_by_semantic = ChunkDocumeto.objects.annotate(
             score=CosineDistance('embedding', embedding_query),
             rank=Window(expression=Rank(), order_by=F('score').asc()),
-        ).order_by('score')[:20]
+        ).order_by('score')
+
+        response: ClassificacaoResponse = httpx.post(
+            'http://redeneuralbert:8000/classificar',
+            json={'texto': query},
+        ).json()
+
+        tipo_documento = Rag.MAPA_CLASSE_API_PARA_MODEL.get(response['classe'])
+        if response['confianca'] >= 0.6 and tipo_documento:
+            ranked_by_bm25 = ranked_by_bm25.filter(
+                documento__tipo=tipo_documento
+            )
+            ranked_by_semantic = ranked_by_semantic.filter(
+                documento__tipo=tipo_documento
+            )
+
+        ranked_by_bm25 = ranked_by_bm25[:k * 4]
+        ranked_by_semantic = ranked_by_semantic[:k * 4]
 
         agrupado = defaultdict(list)
         for chunk in ranked_by_bm25:
@@ -136,8 +166,8 @@ class Rag:
         combinado = []
 
         for chunks in agrupado.values():
-            rank_bm25 = next((c.rank for t, c in chunks if t == 'bm25'), 20)
-            rank_sem = next((c.rank for t, c in chunks if t == 'semantic'), 20)
+            rank_bm25 = next((c.rank for t, c in chunks if t == 'bm25'), k * 4)
+            rank_sem = next((c.rank for t, c in chunks if t == 'semantic'), k * 4)
 
             norm_bm25 = 1 - ((rank_bm25 - 1) / 19)
             norm_sem = 1 - ((rank_sem - 1) / 19)

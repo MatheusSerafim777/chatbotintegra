@@ -1,4 +1,6 @@
-from ninja import Schema
+from ninja import ModelSchema, Schema
+
+from chat.models import Documento
 
 
 class ChatSchema(Schema):
@@ -10,3 +12,9 @@ class ChatSchema(Schema):
 
 class CurtirMensagemSchema(Schema):
     curtido: bool | None
+
+
+class AtualizarTipoDocumentoSchema(ModelSchema):
+    class Meta:
+        model = Documento
+        fields = ['tipo']

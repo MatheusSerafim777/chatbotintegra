@@ -33,20 +33,22 @@ class ImportarDocumentosForm(forms.Form):
         validators=[validators.FileExtensionValidator(['pdf'])],
     )
 
-    # tipo = forms.ChoiceField(
-    #     choices=Documento.Tipo.choices,
-    # )
-
     def __init__(self, *args, **kwargs):
         kwargs['use_required_attribute'] = False
         super().__init__(*args, **kwargs)
         self.fields['documentos'].widget.attrs['autocomplete'] = 'off'
         self.fields['documentos'].widget.attrs['accept'] = '.pdf'
 
-    def save(self):
+    def save(self, tipos=None):
         documentos: list[InMemoryUploadedFile] = self.cleaned_data[
             'documentos'
         ]
+        tipos = tipos or {}
 
-        for documento in documentos:
-            Documento(nome=documento.name, arquivo=documento).save()
+        for i, documento in enumerate(documentos):
+            tipo = tipos.get(str(i), Documento.Tipo.MANUAL)
+            Documento(
+                nome=documento.name,
+                arquivo=documento,
+                tipo_documento=tipo
+            ).save()

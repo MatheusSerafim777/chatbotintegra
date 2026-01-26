@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { usePage, useForm, router } from '@inertiajs/vue3';
+import { usePage, router } from '@inertiajs/vue3';
 
 import Layout from '@/components/Layout.vue';
 import type { DjangoFormData } from "@/types/djangoForm";
 import type { Documento } from '@/types/index';
 import { ref, watch } from 'vue';
-import FormField from '@/components/form/FormField.vue';
 
 const documentoParaExcluir = ref<Documento | null>(null);
 const modalExclusao = ref<HTMLDialogElement | null>(null);
+const modalImportacao = ref<HTMLDialogElement | null>(null);
 
 function abrirModalExclusao(documento: Documento) {
     documentoParaExcluir.value = documento;
@@ -26,7 +26,16 @@ function confirmarExclusao() {
 
 function cancelarExclusao() {
     modalExclusao.value?.close();
-    documentoParaExcluir.value = null;
+    // documentoParaExcluir.value = null;
+}
+
+function abrirModalImportacao() {
+    modalImportacao.value?.showModal();
+}
+
+function fecharModalImportacao() {
+    modalImportacao.value?.close();
+    documentosParaImportar.value = [{ arquivo: null, tipo: 'manual' }];
 }
 
 
@@ -91,12 +100,65 @@ async function atualizarStatusDocumentosPendentes() {
 
 atualizarStatusDocumentosPendentes();
 
-const form = useForm({
-    documentos: [],
-    tipo: '',
-})
+type DocumentoParaImportar = {
+    arquivo: File | null;
+    tipo: 'manual' | 'legislacao';
+};
+
+const documentosParaImportar = ref<DocumentoParaImportar[]>([
+    { arquivo: null, tipo: 'manual' }
+]);
+
+function adicionarDocumento() {
+    documentosParaImportar.value.push({ arquivo: null, tipo: 'manual' });
+}
+
+function removerDocumento(index: number) {
+    if (documentosParaImportar.value.length > 1) {
+        documentosParaImportar.value.splice(index, 1);
+    }
+}
+
+function handleFileChange(index: number, event: Event) {
+    const target = event.target as HTMLInputElement;
+    if (target.files && target.files[0]) {
+        documentosParaImportar.value[index].arquivo = target.files[0];
+    }
+}
+
 function submit() {
-    form.post(page.props['urls']['documentos']);
+    const formData = new FormData();
+
+    documentosParaImportar.value.forEach((doc, index) => {
+        if (doc.arquivo) {
+            formData.append(`documentos[${index}]`, doc.arquivo);
+            formData.append(`tipos[${index}]`, doc.tipo);
+        }
+    });
+
+    router.post(page.props['urls']['documentos'], formData, {
+        onSuccess: () => {
+            fecharModalImportacao();
+        }
+    });
+}
+
+async function atualizarTipoDocumento(documento: Documento, novoTipo: string) {
+    try {
+        const res = await fetch(`/api/documentos/${documento.id}/tipo`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tipo: novoTipo })
+        });
+
+        if (!res.ok) {
+            console.error('Erro ao atualizar tipo de documento');
+        }
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 </script>
@@ -113,20 +175,11 @@ function submit() {
                     <p class="label">Documentos pendentes</p>
                     <p class="font-bold text-2xl">{{ qtdDocumentosPendentes }}</p>
                 </div>
-                <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300">
-                    <form @submit.prevent="submit" class="">
-                        <div class="flex gap-2 items-center">
-                            <div>
-                                <FormField :field="importar_documentos_form.fields[0]"
-                                    @input="form.documentos = Array.from($event.target.files)" />
-
-                                <!-- <FormField :field="importar_documentos_form.fields[1]" @input="form.tipo = $event.target.value" /> -->
-                            </div>
-                            <button class="btn px-2 h-14 rounded">
-                                <i class="bi bi-plus-lg "></i>
-                            </button>
-                        </div>
-                    </form>
+                <div class="mx-auto p-2 w-full max-w-96 rounded flex items-center justify-center">
+                    <button @click="abrirModalImportacao" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i>
+                        Adicionar Documentos
+                    </button>
                 </div>
             </div>
 
@@ -147,8 +200,15 @@ function submit() {
                         <tr v-for="documento in documentos" :key="documento.id">
                             <td>{{ documento.id }}</td>
                             <td>{{ documento.nome }}</td>
-                            <td>{{ documento.status }}</td>
-                            <td>{{ documento.tipo_documento }}</td>
+                            <td>{{ documento.status.charAt(0).toUpperCase() + documento.status.slice(1) }}</td>
+                            <td>
+                                <select v-model="documento.tipo"
+                                    @change="atualizarTipoDocumento(documento, documento.tipo)"
+                                    class="select select-bordered select-sm w-full max-w-xs">
+                                    <option value="manual">Manual</option>
+                                    <option value="legislacao">Legislação</option>
+                                </select>
+                            </td>
                             <td class="w-0 whitespace-nowrap">
                                 <div class="flex gap-2 justify-center">
                                     <a :href="documento.arquivo.url" target="_blank">
@@ -164,6 +224,48 @@ function submit() {
                 </table>
 
             </div>
+
+            <!-- Modal de importação -->
+            <dialog ref="modalImportacao" class="modal">
+                <div class="modal-box max-w-2xl">
+                    <h3 class="font-bold text-lg mb-4">Adicionar Documentos</h3>
+
+                    <div class="space-y-3 max-h-96 overflow-y-auto bg-base-200 rounded p-3">
+                        <div v-for="(doc, index) in documentosParaImportar" :key="index"
+                            class="flex gap-2 items-center">
+                            <div class="flex-1">
+                                <input type="file" accept=".pdf" @change="handleFileChange(index, $event)"
+                                    class="file-input file-input-bordered file-input-sm w-full" />
+                            </div>
+                            <div class="w-40">
+                                <select v-model="doc.tipo" class="select select-bordered select-sm w-full">
+                                    <option value="manual">Manual</option>
+                                    <option value="legislacao">Legislação</option>
+                                </select>
+                            </div>
+                            <button v-if="documentosParaImportar.length > 1" @click="removerDocumento(index)"
+                                class="btn btn-sm btn-ghost btn-circle">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button @click="adicionarDocumento" class="btn btn-sm btn-outline w-full">
+                            <i class="bi bi-plus-lg"></i>
+                            Adicionar outro documento
+                        </button>
+                    </div>
+
+                    <div class="modal-action">
+                        <button class="btn" @click="fecharModalImportacao">Cancelar</button>
+                        <button class="btn btn-primary" @click="submit">Enviar</button>
+                    </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button @click="fecharModalImportacao">close</button>
+                </form>
+            </dialog>
 
             <!-- Modal de confirmação de exclusão -->
             <dialog ref="modalExclusao" class="modal">

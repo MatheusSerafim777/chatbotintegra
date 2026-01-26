@@ -9,8 +9,8 @@ export type Documento = {
     id: number;
     nome: string;
     arquivo: FileField;
-    status: 'pendente' | 'processado' | 'processado';
-    tipo_documento: 'legislacao' | 'manual';
+    status: 'pendente' | 'processando' | 'processado';
+    tipo: 'legislacao' | 'manual';
 }
 
 export type Usuario = {

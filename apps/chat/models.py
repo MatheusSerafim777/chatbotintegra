@@ -32,6 +32,11 @@ class Documento(models.Model):
         upload_to='documentos/',
         validators=[FileExtensionValidator(['pdf'])],
     )
+    tipo = models.CharField(
+        max_length=20,
+        choices=Tipo.choices,
+        default=Tipo.MANUAL,
+    )
     conteudo = models.TextField(blank=True)
     status = models.CharField(
         max_length=20,
