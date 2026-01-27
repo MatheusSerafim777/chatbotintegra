@@ -32,6 +32,14 @@ services:
     networks:
       - app-network
 
+  redeneuralbert:
+    image: integracar/redeneuralbert:8.0
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+    networks:
+      - app-network
+
   db:
     image: paradedb/paradedb
     volumes:
