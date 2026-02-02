@@ -3,7 +3,7 @@ import re
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.db.models import F
+from django.db.models import F, Q
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
@@ -55,11 +55,14 @@ class ConversaView(BaseChatView):
         return map_mensagens
 
     def get(self, request: HttpRequest, id_conversa: int):
-        conversa = get_object_or_404(
-            Conversa,
-            id=id_conversa,
-            usuario=request.user,
-        )
+        if request.user.is_superuser:
+            qs = Conversa.objects.all()
+        else:
+            qs = Conversa.objects.filter(
+                usuario=request.user,
+            )
+
+        conversa = get_object_or_404(qs, id=id_conversa)
 
         share(
             request=request,
