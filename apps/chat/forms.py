@@ -50,5 +50,5 @@ class ImportarDocumentosForm(forms.Form):
             Documento(
                 nome=documento.name,
                 arquivo=documento,
-                tipo_documento=tipo
+                tipo=tipo
             ).save()
