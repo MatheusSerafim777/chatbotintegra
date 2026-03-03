@@ -1,9 +1,8 @@
-import json
 import re
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.db.models import F, Q
+from django.db.models import F
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
@@ -108,14 +107,14 @@ class DocumentosView(View):
                 if re.compile(r'^documentos\[\d+\]$').match(name)
             ]
         }
-        
+
         # Extrair os tipos de documentos do POST
         tipos = {}
         for key, value in request.POST.items():
             match = re.compile(r'^tipos\[(\d+)\]$').match(key)
             if match:
                 tipos[match.group(1)] = value
-        
+
         form = self.form_class({}, arquivos)
         if not form.is_valid():
             return self.get(request, {'importar_documentos_form': form})

@@ -9,7 +9,7 @@ export type Documento = {
     id: number;
     nome: string;
     arquivo: FileField;
-    status: 'pendente' | 'processando' | 'processado';
+    status: 'pendente' | 'processando' | 'processado' | 'erro';
     tipo: 'legislacao' | 'manual';
 }
 

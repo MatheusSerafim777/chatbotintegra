@@ -1,7 +1,9 @@
+import logging
 import re
 from collections import defaultdict
-from typing import Generator
+from typing import Generator, Literal, TypedDict
 
+import httpx
 from django.conf import settings
 from django.db.models import (
     F,
@@ -10,7 +12,6 @@ from django.db.models import (
     Window,
 )
 from django.db.models.functions import Rank
-import httpx
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -19,11 +20,12 @@ from pgvector.django import CosineDistance
 
 from chat.functions import BM25Score, PdbQueryCast
 from chat.models import ChunkDocumeto, Documento, Mensagem, StatusDocumento
-from typing import TypedDict, Literal
+
+logger = logging.getLogger(__name__)
 
 
 class ClassificacaoResponse(TypedDict):
-    classe: Literal["Manual", "Legislação"]
+    classe: Literal['Manual', 'Legislação']
     confianca: float
 
 
@@ -46,46 +48,148 @@ class Rag:
     )
 
     MAPA_CLASSE_API_PARA_MODEL = {
-        "Manual": Documento.Tipo.MANUAL,
-        "Legislação": Documento.Tipo.LEGISLACAO,
+        'Manual': Documento.Tipo.MANUAL,
+        'Legislação': Documento.Tipo.LEGISLACAO,
     }
-
 
     @staticmethod
     def extrair_e_salvar_conteudo(id_documento: int) -> None:
-        documento = Documento.objects.get(id=id_documento)
 
-        conteudo = ' '.join([
-            d.page_content
-            for d in PyPDFLoader(documento.arquivo.path, mode='single').load()
-        ])
+        # Usa update() para mudar status sem disparar post_save signal
+        updated = Documento.objects.filter(
+            id=id_documento,
+            status=StatusDocumento.PENDENTE,
+        ).update(status=StatusDocumento.PROCESSANDO)
 
-        conteudo = re.sub(r'\s+', ' ', conteudo).strip()
+        if not updated:
+            logger.warning(
+                f'Documento {id_documento} não está PENDENTE '
+                f'(possível execução duplicada). Abortando extração.'
+            )
+            return
 
-        documento.conteudo = conteudo
-        documento.save()
+        try:
+            documento = Documento.objects.get(id=id_documento)
+
+            conteudo = ' '.join([
+                d.page_content
+                for d in PyPDFLoader(
+                    documento.arquivo.path, mode='single'
+                ).load()
+            ])
+
+            conteudo = re.sub(r'\s+', ' ', conteudo).strip()
+
+            if not conteudo:
+                logger.error(
+                    f'Documento {id_documento}: conteúdo extraído está vazio.'
+                )
+                Documento.objects.filter(id=id_documento).update(
+                    status=StatusDocumento.ERRO,
+                )
+                return
+
+            # Usa update() para não disparar o signal post_save
+            Documento.objects.filter(id=id_documento).update(
+                conteudo=conteudo,
+                status=StatusDocumento.PROCESSANDO,
+            )
+            logger.info(
+                f'Documento {id_documento}: conteúdo extraído '
+                f'({len(conteudo)} caracteres).'
+            )
+        except Exception as e:
+            logger.exception(
+                f'Erro ao extrair conteúdo do documento {id_documento}: {e}'
+            )
+            Documento.objects.filter(id=id_documento).update(
+                status=StatusDocumento.ERRO,
+            )
+            raise
+
+    # Tamanho máximo de batch para chamadas de embedding (evita timeout)
+    EMBEDDING_BATCH_SIZE = 100
 
     @staticmethod
     def gerar_e_embedar_chunks(id_documento: int) -> None:
         documento = Documento.objects.get(id=id_documento)
-        documento.embeddings.all().delete()
 
-        chunks = Rag.splitter.split_text(documento.conteudo)
-        embeddings = Rag.embedding.embed_documents(chunks)
+        # Verifica se o documento está em estado válido para processamento
+        if documento.status not in {
+            StatusDocumento.PROCESSANDO,
+        }:
+            logger.warning(
+                f'Documento {id_documento} não está PROCESSANDO '
+                f'(status={documento.status}). Abortando geração de chunks.'
+            )
+            return
 
-        chunks_documento = []
-        for chunk, embedding in zip(chunks, embeddings, strict=False):
-            chunks_documento.append(
+        if not documento.conteudo:
+            logger.error(
+                f'Documento {id_documento} não possui conteúdo. '
+                f'Abortando geração de chunks.'
+            )
+            Documento.objects.filter(id=id_documento).update(
+                status=StatusDocumento.ERRO,
+            )
+            return
+
+        try:
+            documento.embeddings.all().delete()
+
+            chunks = Rag.splitter.split_text(documento.conteudo)
+
+            if not chunks:
+                logger.error(
+                    f'Documento {id_documento}: splitter retornou 0 chunks.'
+                )
+                Documento.objects.filter(id=id_documento).update(
+                    status=StatusDocumento.ERRO,
+                )
+                return
+
+            logger.info(
+                f'Documento {id_documento}: gerando embeddings '
+                f'para {len(chunks)} chunks.'
+            )
+
+            # Processa embeddings em batches para evitar timeout
+            # em documentos grandes
+            all_embeddings = []
+            for i in range(0, len(chunks), Rag.EMBEDDING_BATCH_SIZE):
+                batch = chunks[i : i + Rag.EMBEDDING_BATCH_SIZE]
+                batch_embeddings = Rag.embedding.embed_documents(batch)
+                all_embeddings.extend(batch_embeddings)
+
+            chunks_documento = [
                 ChunkDocumeto(
                     documento=documento,
                     conteudo=chunk,
                     embedding=embedding,
                 )
-            )
+                for chunk, embedding in zip(
+                    chunks, all_embeddings, strict=False
+                )
+            ]
 
-        ChunkDocumeto.objects.bulk_create(chunks_documento)
-        documento.status = StatusDocumento.PROCESSADO
-        documento.save()
+            ChunkDocumeto.objects.bulk_create(chunks_documento)
+
+            # Usa update() para não disparar o signal post_save
+            Documento.objects.filter(id=id_documento).update(
+                status=StatusDocumento.PROCESSADO,
+            )
+            logger.info(
+                f'Documento {id_documento}: processado com sucesso '
+                f'({len(chunks)} chunks criados).'
+            )
+        except Exception as e:
+            logger.exception(
+                f'Erro ao gerar chunks do documento {id_documento}: {e}'
+            )
+            Documento.objects.filter(id=id_documento).update(
+                status=StatusDocumento.ERRO,
+            )
+            raise
 
     @staticmethod
     def top_k_bm25(query: str, k: int) -> QuerySet[ChunkDocumeto]:
@@ -115,7 +219,7 @@ class Rag:
         return qs
 
     @staticmethod
-    def top_k_chunks(query: str, k: int = 5) -> list[str]:
+    def top_k_chunks(query: str, k: int = 5) -> list[str]:  # noqa
         embedding_query = Rag.embedding.embed_query(query)
 
         ranked_by_bm25 = (
@@ -144,7 +248,8 @@ class Rag:
         ).json()
 
         tipo_documento = Rag.MAPA_CLASSE_API_PARA_MODEL.get(response['classe'])
-        if response['confianca'] >= 0.6 and tipo_documento:
+        CONFIANCA_MINIMA = 1
+        if response['confianca'] >= CONFIANCA_MINIMA and tipo_documento:
             ranked_by_bm25 = ranked_by_bm25.filter(
                 documento__tipo=tipo_documento
             )
@@ -152,8 +257,8 @@ class Rag:
                 documento__tipo=tipo_documento
             )
 
-        ranked_by_bm25 = ranked_by_bm25[:k * 4]
-        ranked_by_semantic = ranked_by_semantic[:k * 4]
+        ranked_by_bm25 = ranked_by_bm25[: k * 4]
+        ranked_by_semantic = ranked_by_semantic[: k * 4]
 
         agrupado = defaultdict(list)
         for chunk in ranked_by_bm25:
@@ -167,7 +272,9 @@ class Rag:
 
         for chunks in agrupado.values():
             rank_bm25 = next((c.rank for t, c in chunks if t == 'bm25'), k * 4)
-            rank_sem = next((c.rank for t, c in chunks if t == 'semantic'), k * 4)
+            rank_sem = next(
+                (c.rank for t, c in chunks if t == 'semantic'), k * 4
+            )
 
             norm_bm25 = 1 - ((rank_bm25 - 1) / 19)
             norm_sem = 1 - ((rank_sem - 1) / 19)

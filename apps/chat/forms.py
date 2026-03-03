@@ -47,8 +47,4 @@ class ImportarDocumentosForm(forms.Form):
 
         for i, documento in enumerate(documentos):
             tipo = tipos.get(str(i), Documento.Tipo.MANUAL)
-            Documento(
-                nome=documento.name,
-                arquivo=documento,
-                tipo=tipo
-            ).save()
+            Documento(nome=documento.name, arquivo=documento, tipo=tipo).save()

@@ -20,6 +20,7 @@ class StatusDocumento(models.TextChoices):
     PENDENTE = 'pendente', 'Pendente'
     PROCESSANDO = 'processando', 'Processando'
     PROCESSADO = 'processado', 'Processado'
+    ERRO = 'erro', 'Erro'
 
 
 class Documento(models.Model):

@@ -1,5 +1,4 @@
 import json
-import httpx
 
 from django.db import transaction
 from django.http import HttpRequest, StreamingHttpResponse
@@ -10,9 +9,14 @@ from openai import APIConnectionError
 
 from chat.models import Conversa, Documento, Mensagem
 from chat.rag import Rag
-from chat.schemas import AtualizarTipoDocumentoSchema, ChatSchema, CurtirMensagemSchema
+from chat.schemas import (
+    AtualizarTipoDocumentoSchema,
+    ChatSchema,
+    CurtirMensagemSchema,
+)
 
 chat_router = Router()
+
 
 @chat_router.post('/chat')
 def chat_endpoint(request: HttpRequest, payload: ChatSchema):
@@ -132,13 +136,17 @@ def status_documento(request: HttpRequest, id_documento: int):
 
 
 @chat_router.patch('/documentos/{id_documento}/tipo')
-def atualizar_tipo_documento(request: HttpRequest, id_documento: int, payload: AtualizarTipoDocumentoSchema):
+def atualizar_tipo_documento(
+    request: HttpRequest,
+    id_documento: int,
+    payload: AtualizarTipoDocumentoSchema,
+):
     documento = get_object_or_404(Documento, id=id_documento)
     tipo = payload.tipo
-    
+
     documento.tipo = tipo
     documento.save(update_fields=['tipo'])
-    
+
     return 400, {'error': 'Tipo inválido'}
 
 

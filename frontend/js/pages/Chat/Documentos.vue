@@ -73,7 +73,9 @@ async function atualizarStatusDocumentosPendentes() {
     verificando = true;
 
     while (true) {
-        const pendentes = documentos.value.filter(d => d.status === "pendente");
+        const pendentes = documentos.value.filter(
+            d => d.status === "pendente" || d.status === "processando"
+        );
         if (pendentes.length === 0) break;
 
         await new Promise(r => setTimeout(r, 5000));
@@ -200,7 +202,22 @@ async function atualizarTipoDocumento(documento: Documento, novoTipo: string) {
                         <tr v-for="documento in documentos" :key="documento.id">
                             <td>{{ documento.id }}</td>
                             <td>{{ documento.nome }}</td>
-                            <td>{{ documento.status.charAt(0).toUpperCase() + documento.status.slice(1) }}</td>
+                            <td>
+                                <span v-if="documento.status === 'erro'" class="badge badge-error text-error-content">
+                                    Erro
+                                </span>
+                                <span v-else-if="documento.status === 'processado'"
+                                    class="badge badge-success text-success-content">
+                                    Processado
+                                </span>
+                                <span v-else-if="documento.status === 'processando'"
+                                    class="badge badge-warning text-warning-content">
+                                    Processando
+                                </span>
+                                <span v-else class="badge badge-neutral">
+                                    Pendente
+                                </span>
+                            </td>
                             <td>
                                 <select v-model="documento.tipo"
                                     @change="atualizarTipoDocumento(documento, documento.tipo)"
