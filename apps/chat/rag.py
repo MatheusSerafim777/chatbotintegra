@@ -2,6 +2,7 @@ import logging
 import re
 from collections import defaultdict
 from typing import Generator, Literal, TypedDict
+import unicodedata
 
 import httpx
 from django.conf import settings
