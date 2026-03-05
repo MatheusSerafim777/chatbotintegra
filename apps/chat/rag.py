@@ -29,6 +29,21 @@ class ClassificacaoResponse(TypedDict):
     confianca: float
 
 
+
+
+def normalize(text: str) -> str:
+    STOPWORDS = {"a", "o", "e", "de", "da", "do", "para", "em"}
+    text = text.lower()
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(c for c in text if unicodedata.category(c) != "Mn")
+    text = re.sub(r"[^\w\s]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+
+    tokens = text.split()
+    tokens = [t for t in tokens if t not in STOPWORDS]
+
+    return " ".join(tokens)
+
 class Rag:
     chat = ChatOpenAI(
         model='gpt-4.1-mini-2025-04-14',
@@ -230,7 +245,7 @@ class Rag:
             .filter(
                 conteudo__bm25=PdbQueryCast(
                     Value(
-                        f'{{"match": {{"value": "{re.sub(r"\s+", " ", query).strip()}"}}}}'
+                        f'{{"match": {{"value": "{normalize(query)}"}}}}'
                     )
                 )
             )
