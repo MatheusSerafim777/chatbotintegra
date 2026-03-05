@@ -41,7 +41,7 @@ services:
       - app-network
 
   db:
-    image: paradedb/paradedb:latest-pg16
+    image: paradedb/paradedb:latest-pg17
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
