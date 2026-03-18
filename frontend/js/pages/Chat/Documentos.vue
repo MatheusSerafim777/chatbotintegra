@@ -186,7 +186,7 @@ async function atualizarTipoDocumento(documento: Documento, novoTipo: string) {
             </div>
 
 
-            <div class="overflow-x-auto rounded-box border border-base-content/10 bg-base-100">
+            <div class="overflow-x-auto rounded-lg border border-base-content/10 bg-base-100">
                 <table class="table table-zebra table-auto">
                     <thead>
                         <tr>

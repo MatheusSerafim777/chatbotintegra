@@ -23,7 +23,7 @@ const page = usePage();
         </div>
 
         <!-- Conteúdo -->
-        <div class="grow flex min-h-0 flex-col px-3 pb-3 sm:px-4 sm:pb-4">
+        <div class="grow flex min-h-0 flex-col overflow-y-auto overflow-x-hidden px-3 pb-3 sm:px-4 sm:pb-4">
 
             <slot></slot>
 

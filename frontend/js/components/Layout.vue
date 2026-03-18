@@ -83,7 +83,7 @@ const cancelarExclusao = () => {
             </nav>
 
             <!-- Page content here -->
-            <div class="grow min-h-0 flex flex-col">
+            <div class="grow min-h-0 flex flex-col overflow-y-auto overflow-x-hidden">
 
                 <slot></slot>
             </div>
@@ -120,7 +120,7 @@ const cancelarExclusao = () => {
                         </Link>
                     </li>
                 </ul>
-                
+
                 <hr class="my-2">
                 <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain is-drawer-close:hidden">
                     <ul class="menu w-full">
