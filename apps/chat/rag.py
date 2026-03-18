@@ -264,7 +264,7 @@ class Rag:
         ).json()
 
         tipo_documento = Rag.MAPA_CLASSE_API_PARA_MODEL.get(response['classe'])
-        CONFIANCA_MINIMA = 1
+        CONFIANCA_MINIMA = 0.6 + 1
         if response['confianca'] >= CONFIANCA_MINIMA and tipo_documento:
             ranked_by_bm25 = ranked_by_bm25.filter(
                 documento__tipo=tipo_documento
@@ -286,16 +286,18 @@ class Rag:
         semantic_weight = 0.5
         combinado = []
 
+        RRF_CONSTANT = 60 
+
         for chunks in agrupado.values():
-            rank_bm25 = next((c.rank for t, c in chunks if t == 'bm25'), k * 4)
-            rank_sem = next(
-                (c.rank for t, c in chunks if t == 'semantic'), k * 4
-            )
+            rank_bm25 = next((c.rank for t, c in chunks if t == 'bm25'), None)
+            rank_sem = next((c.rank for t, c in chunks if t == 'semantic'), None)
 
-            norm_bm25 = 1 - ((rank_bm25 - 1) / 19)
-            norm_sem = 1 - ((rank_sem - 1) / 19)
+            # Se não foi encontrado em um dos métodos, o score daquele método é 0
+            score_bm25 = 1.0 / (RRF_CONSTANT + rank_bm25) if rank_bm25 else 0.0
+            score_sem = 1.0 / (RRF_CONSTANT + rank_sem) if rank_sem else 0.0
 
-            total_score = bm25_weight * norm_bm25 + semantic_weight * norm_sem
+            # Você pode manter seus pesos se quiser dar mais força para a semântica ou exata
+            total_score = (bm25_weight * score_bm25) + (semantic_weight * score_sem)
 
             representante = chunks[0][1]
             representante.score = total_score
