@@ -5,6 +5,7 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import F
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -62,6 +63,9 @@ class ConversaView(BaseChatView):
             )
 
         conversa = get_object_or_404(qs, id=id_conversa)
+        
+        conversa.visitada_em = timezone.now()
+        conversa.save(update_fields=['visitada_em'])
 
         share(
             request=request,

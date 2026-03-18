@@ -2,12 +2,6 @@
 
 @plugin "daisyui";
 
-.teste {
-  color: #caddc2;
-}
-
-
-
 @plugin "daisyui/theme" {
   name: "wastedpromax";
   default: true;

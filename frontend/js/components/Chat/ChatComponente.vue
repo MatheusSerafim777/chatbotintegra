@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, computed, watch, onMounted } from 'vue';
+import { ref, nextTick, computed, watch, onMounted, onUnmounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import Mensagem from './Mensagem.vue';
 import { Usuario } from '@/types/index';
@@ -33,9 +33,30 @@ const mapMensagens = ref<MapMensagens>(page.props.map_mensagens ?? {});
 
 const idConversa = ref<number | null>(page.props.id_conversa ?? null);
 const pergunta = ref('');
+const enviandoMensagem = ref(false);
 const editable = ref<HTMLElement | null>(null);
 const containerMensagens = ref<HTMLElement | null>(null);
 const mensagemRef = ref<typeof Mensagem | null>(null);
+
+function focarInputMensagem(cursorNoFinal = true) {
+    if (!editable.value) return;
+
+    editable.value.focus();
+    if (!cursorNoFinal) return;
+
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    const range = document.createRange();
+    range.selectNodeContents(editable.value);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
+const handleWindowFocus = () => {
+    focarInputMensagem();
+};
 
 const mensagensRaiz = computed<number[]>(
     () =>
@@ -46,9 +67,8 @@ const mensagensRaiz = computed<number[]>(
 
 watch(
     idConversa, (novoIdConversa, antigoIdConversa) => {
-        console.log(page.props)
         if (novoIdConversa !== antigoIdConversa) {
-            if (novoIdConversa == null) { 
+            if (novoIdConversa == null) {
                 router.visit('/', { replace: true, preserveState: true });
             } else if (page.props.user) {
                 router.visit(`/c/${novoIdConversa}/`, { replace: true, preserveState: true });
@@ -64,8 +84,9 @@ async function adicionarMensagem(mensagem: TMensagem) {
 }
 
 const enviarMensagem = async () => {
-    if (!pergunta.value.trim()) return;
+    if (!pergunta.value.trim() || enviandoMensagem.value) return;
 
+    enviandoMensagem.value = true;
     const mensagemPaiSelecionada: number | null = mensagensRaiz.value.length > 0 ? mensagemRef.value?.obterIdUltimaMensagem() : null;
     const mensagemUsuario: TMensagem = {
         id: Date.now() + Math.random(),
@@ -86,6 +107,8 @@ const enviarMensagem = async () => {
     if (editable.value) {
         editable.value.textContent = '';
     }
+    await nextTick();
+    focarInputMensagem(false);
 
     // mensagem vazia do bot
     const botMessage: TMensagem = {
@@ -107,66 +130,77 @@ const enviarMensagem = async () => {
         id_conversa: idConversa.value,
     };
 
-    const response = await fetch('/api/chat', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-    });
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
 
-    if (!response.body) {
-        return;
-    }
-    // faça uma tabela simples, sem `
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    let primeiro = true;
-    let idMensagemBot = botMessage.id;
-    while (true) {
-        const { value, done } = await reader.read();
-
-        if (done) break;
-        if (primeiro) {
-            primeiro = false;
-            const dados: chatResponse = JSON.parse(decoder.decode(value));
-            idConversa.value = dados.id_conversa;
-
-            // Atualiza o ID da mensagem do usuário
-            const idAntigoUsuario = mensagemUsuario.id;
-            const novoIdUsuario = dados.id_mensagem_pergunta;
-            mensagemUsuario.id = novoIdUsuario;
-            delete mapMensagens.value[idAntigoUsuario];
-            mapMensagens.value[novoIdUsuario] = mensagemUsuario;
-
-            // Atualiza a referência na mensagem pai
-            if (mensagemPaiSelecionada !== null) {
-                const filhas = mapMensagens.value[mensagemPaiSelecionada].mensagens_filhas;
-                const index = filhas.indexOf(idAntigoUsuario);
-                if (index !== -1) {
-                    filhas[index] = novoIdUsuario;
-                }
-            }
-
-            // Atualiza o ID da mensagem do bot
-            const idAntigoBot = botMessage.id;
-            const novoIdBot = dados.id_mensagem_resposta;
-            botMessage.id = novoIdBot;
-            botMessage.mensagem_pai = novoIdUsuario;
-            delete mapMensagens.value[idAntigoBot];
-            mapMensagens.value[novoIdBot] = botMessage;
-            idMensagemBot = novoIdBot;
-
-            // Atualiza a referência na mensagem do usuário
-            const filhasUsuario = mapMensagens.value[novoIdUsuario].mensagens_filhas;
-            const indexBot = filhasUsuario.indexOf(idAntigoBot);
-            if (indexBot !== -1) {
-                filhasUsuario[indexBot] = novoIdBot;
-            }
-
-            continue;
+        if (!response.body) {
+            mapMensagens.value[botMessage.id].conteudo = 'Não foi possível obter resposta do assistente.';
+            return;
         }
-        mapMensagens.value[idMensagemBot].conteudo += decoder.decode(value);  // input de escrita
-        scrollParaUltimaMensagem();
-    };
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        let primeiro = true;
+        let idMensagemBot = botMessage.id;
+        while (true) {
+            const { value, done } = await reader.read();
+
+            if (done) break;
+            if (primeiro) {
+                primeiro = false;
+                const dados: chatResponse = JSON.parse(decoder.decode(value));
+                idConversa.value = dados.id_conversa;
+
+                // Atualiza o ID da mensagem do usuário
+                const idAntigoUsuario = mensagemUsuario.id;
+                const novoIdUsuario = dados.id_mensagem_pergunta;
+                mensagemUsuario.id = novoIdUsuario;
+                delete mapMensagens.value[idAntigoUsuario];
+                mapMensagens.value[novoIdUsuario] = mensagemUsuario;
+
+                // Atualiza a referência na mensagem pai
+                if (mensagemPaiSelecionada !== null) {
+                    const filhas = mapMensagens.value[mensagemPaiSelecionada].mensagens_filhas;
+                    const index = filhas.indexOf(idAntigoUsuario);
+                    if (index !== -1) {
+                        filhas[index] = novoIdUsuario;
+                    }
+                }
+
+                // Atualiza o ID da mensagem do bot
+                const idAntigoBot = botMessage.id;
+                const novoIdBot = dados.id_mensagem_resposta;
+                botMessage.id = novoIdBot;
+                botMessage.mensagem_pai = novoIdUsuario;
+                delete mapMensagens.value[idAntigoBot];
+                mapMensagens.value[novoIdBot] = botMessage;
+                idMensagemBot = novoIdBot;
+
+                // Atualiza a referência na mensagem do usuário
+                const filhasUsuario = mapMensagens.value[novoIdUsuario].mensagens_filhas;
+                const indexBot = filhasUsuario.indexOf(idAntigoBot);
+                if (indexBot !== -1) {
+                    filhasUsuario[indexBot] = novoIdBot;
+                }
+
+                continue;
+            }
+            mapMensagens.value[idMensagemBot].conteudo += decoder.decode(value);
+            scrollParaUltimaMensagem();
+        }
+    } catch (error) {
+        botMessage.conteudo = 'Ocorreu um erro ao enviar sua mensagem. Tente novamente.';
+    } finally {
+        enviandoMensagem.value = false;
+        await nextTick();
+        focarInputMensagem();
+    }
 }
 
 
@@ -189,31 +223,38 @@ function scrollParaUltimaMensagem(smooth = true) {
 onMounted(async () => {
     await nextTick();
     scrollParaUltimaMensagem(false);
-})
+    focarInputMensagem();
+
+    window.addEventListener('focus', handleWindowFocus);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('focus', handleWindowFocus);
+});
 </script>
 
 <template>
-    <div class="flex-1 pb-4 mx-auto flex flex-col justify-between w-full">
-        <div class="overflow-auto flex-1 max-h-[85vh]" ref="containerMensagens">
-            <div class="w-full max-w-3xl mx-auto py-2">
+    <div class="mx-auto flex h-full w-full max-w-5xl flex-1 flex-col justify-between gap-3 pb-2 pt-3 sm:gap-4 sm:pb-4">
+        <div class="min-h-0 flex-1 overflow-y-auto px-1" ref="containerMensagens">
+            <div class="mx-auto w-full max-w-3xl space-y-3 pb-1">
                 <Mensagem ref="mensagemRef" v-if="mensagensRaiz.length > 0" :map-mensagens="mapMensagens"
                     :ids="mensagensRaiz" />
             </div>
         </div>
-        <form @submit.prevent="enviarMensagem" class="w-full max-w-3xl mx-auto">
+        <form @submit.prevent="enviarMensagem" class="mx-auto w-full max-w-3xl px-1">
             <label for="pergunta"
-                class="relative flex justify-between items-center gap-4 min-h-14 rounded-[28px] bg-base-300 text-base-content shadow-2xl shadow-base-300 p-2.5 cursor-text"
+                class="relative flex min-h-14 cursor-text items-center justify-between gap-2 rounded-[28px] border border-base-content/10 bg-base-300 px-3 py-2 text-base-content shadow-lg"
                 @click="editable?.focus()">
 
                 <!-- placeholder -->
                 <span v-if="!pergunta.trim()"
-                    class="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none select-none">
+                    class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 select-none text-base-content/50">
                     Digite sua mensagem...
                 </span>
-                <div class="w-full max-h-60 overflow-scroll">
+                <div class="flex w-full max-h-52 items-center overflow-y-auto">
                     <div ref="editable" autofocus="true" id="pergunta" contenteditable="true" role="textbox"
                         aria-multiline="true"
-                        class="w-full bg-transparent focus:outline-none p-0 font-medium min-h-6 whitespace-pre-wrap wrap-break-word"
+                        class="min-h-6 w-full wrap-break-word bg-transparent py-1 font-medium whitespace-pre-wrap focus:outline-none"
                         @input="pergunta = editable?.innerText ?? ''"
                         @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }"
                         @paste="handlePaste">
@@ -221,7 +262,7 @@ onMounted(async () => {
                 </div>
 
                 <button class="btn btn-neutral text-neutral-content h-9 w-9 btn-circle p-0"
-                    :disabled="!pergunta.trim()">
+                    :disabled="!pergunta.trim() || enviandoMensagem">
                     <i class="bi bi-arrow-up-short text-4xl h-9 w-9"></i>
                 </button>
             </label>

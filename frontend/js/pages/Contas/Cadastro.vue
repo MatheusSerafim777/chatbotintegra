@@ -16,8 +16,8 @@ const page = usePage<{
 
 <template>
     <LayoutAnonimo>
-        <div class="flex grow h-full items-center justify-center">
-            <div class="card bg-base-200 card-border border-base-300 card-sm min-w-xs sm:min-w-sm">
+        <div class="flex grow min-h-0 items-center justify-center py-4 sm:py-8">
+            <div class="card bg-base-200 card-border border-base-300 card-sm w-full max-w-md">
                 <div class="border-base-300 border-b border-dashed">
                     <div class="flex items-center gap-2 p-4">
                         <div class="grow">
@@ -39,9 +39,9 @@ const page = usePage<{
                         Lembrar de mim
                     </label>
 
-                    <div class="card-actions flex flex-col items-center justify-center gap-6">
-                        <button class="btn btn-neutral">Cadastrar</button>
-                        <Link :href="page.props.urls['entrar']">Ja tem conta? Entrar</Link>
+                    <div class="card-actions flex flex-col items-center justify-center gap-4">
+                        <button class="btn btn-neutral btn-block">Cadastrar</button>
+                        <Link :href="page.props.urls['entrar']" class="link link-hover">Já tem conta? Entrar</Link>
                     </div>
                 </Form>
 

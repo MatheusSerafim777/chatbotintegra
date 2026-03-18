@@ -38,11 +38,11 @@ async function copiarMensagem() {
 <template>
     <div class="flex flex-col items-end gap-2 group">
         <div
-            class="max-w-lg px-4 py-1.5 rounded-[18px] bg-neutral text-neutral-content whitespace-pre-wrap wrap-break-word">
+            class="max-w-[90%] sm:max-w-lg rounded-[18px] bg-neutral px-4 py-2 text-neutral-content whitespace-pre-wrap wrap-break-word">
             <p v-html="escapeHtml(mensagem.conteudo)"></p>
         </div>
         <div
-            class="flex gap-0 opacity-0 pointer-events-none transition hover:transition-none group-hover:opacity-100 group-hover:pointer-events-auto">
+            class="flex flex-wrap gap-0 opacity-100 pointer-events-auto transition sm:opacity-0 sm:pointer-events-none sm:hover:transition-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto">
             <button class="btn btn-ghost btn-xs btn-square" @click="copiarMensagem">
                 <i class="text-base" :class="copiado ? 'bi bi-check-lg' : 'bi bi-copy'"></i>
             </button>

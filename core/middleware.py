@@ -52,6 +52,7 @@ class DataShareMiddleware(object):
         conversas = []
         if request.user.is_authenticated:
             conversas = Conversa.objects.filter(usuario=request.user).order_by(
+                '-visitada_em',
                 '-criado_em'
             )
 

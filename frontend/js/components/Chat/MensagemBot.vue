@@ -53,15 +53,16 @@ async function curtirMensagem(valor: boolean) {
 </script>
 
 <template>
-    <div class="flex flex-col items-start gap-2 mt-4 group text-black">
+    <div class="group mt-4 flex flex-col items-start gap-2">
 
-        <div v-if="mensagem.conteudo" class="markdown" v-html="md.render(mensagem.conteudo)"></div>
+        <div v-if="mensagem.conteudo" class="markdown w-full rounded-2xl bg-base-100 px-4 py-3"
+            v-html="md.render(mensagem.conteudo)"></div>
         <div v-else class="inline-grid *:[grid-area:1/1]">
             <div class="status status-neutral animate-ping status-lg"></div>
             <div class="status status-neutral status-lg"></div>
         </div>
 
-        <div class="flex gap-0">
+        <div class="flex flex-wrap gap-0">
             <div class="flex items-center gap-0.5" v-if="maxMensagemSelecionada > 0">
                 <button class="btn btn-ghost btn-xs btn-square" :disabled="indexMensagemSelecionada <= 0"
                     @click="setIndexMensagemSelecionada(indexMensagemSelecionada - 1)">
@@ -86,9 +87,6 @@ async function curtirMensagem(valor: boolean) {
                 :class="{ 'text-error': curtido === false }">
                 <i class="text-base"
                     :class="curtido === false ? 'bi bi-hand-thumbs-down-fill' : 'bi bi-hand-thumbs-down'"></i>
-            </button>
-            <button class="btn btn-ghost btn-xs btn-square">
-                <i class="bi bi-arrow-repeat text-base"></i>
             </button>
         </div>
     </div>

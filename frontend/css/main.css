@@ -1,18 +1,51 @@
 @import "./tailwind.css";
 
+html,
+body,
+#app {
+    height: 100%;
+}
+
+:root {
+    scrollbar-gutter: stable;
+}
+
 * {
     font-family: Arial, Helvetica, sans-serif;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-base-content) 26%, transparent) transparent;
 }
 
 #app {
     min-height: 100vh;
 }
 
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--color-base-content) 22%, transparent);
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-clip: padding-box;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--color-base-content) 38%, transparent);
+    background-clip: padding-box;
+}
+
 .textarea {
     border-radius: 0.5rem;
 }
 
-.markdown { 
+.markdown {
     line-height: 1.6;
     width: 100%;
 }

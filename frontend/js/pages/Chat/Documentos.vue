@@ -167,18 +167,18 @@ async function atualizarTipoDocumento(documento: Documento, novoTipo: string) {
 
 <template>
     <Layout>
-        <div class="max-w-3xl mx-auto space-y-4 p-4">
-            <div class="flex flex-col md:flex-row gap-4">
-                <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300 flex flex-col items-center justify-center">
+        <div class="mx-auto w-full max-w-5xl space-y-4 p-3 sm:p-4">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+                <div class="rounded bg-base-300 p-3 flex flex-col items-center justify-center">
                     <p class="label">Documentos processados</p>
                     <p class="font-bold text-2xl">{{ qtdDocumentosProcessados }}</p>
                 </div>
-                <div class="mx-auto p-2 w-full max-w-96 rounded bg-base-300 flex flex-col items-center justify-center">
+                <div class="rounded bg-base-300 p-3 flex flex-col items-center justify-center">
                     <p class="label">Documentos pendentes</p>
                     <p class="font-bold text-2xl">{{ qtdDocumentosPendentes }}</p>
                 </div>
-                <div class="mx-auto p-2 w-full max-w-96 rounded flex items-center justify-center">
-                    <button @click="abrirModalImportacao" class="btn btn-primary">
+                <div class="rounded p-2 flex items-center justify-center">
+                    <button @click="abrirModalImportacao" class="btn btn-primary btn-block md:btn-wide">
                         <i class="bi bi-plus-lg"></i>
                         Adicionar Documentos
                     </button>
@@ -186,8 +186,8 @@ async function atualizarTipoDocumento(documento: Documento, novoTipo: string) {
             </div>
 
 
-            <div class="overflow-scroll">
-                <table class="table table-auto">
+            <div class="overflow-x-auto rounded-box border border-base-content/10 bg-base-100">
+                <table class="table table-zebra table-auto">
                     <thead>
                         <tr>
                             <th>ID</th>

@@ -13,9 +13,9 @@ const page = usePage();
 <template>
     <LayoutAnonimo>
 
-        <div class="flex grow h-full items-center justify-center">
-            <div class="card card-sm overflow-hidden min-w-xs sm:min-w-sm">
-                <div class="card bg-base-200 card-border border-base-300 card-sm overflow-hidden ">
+        <div class="flex grow min-h-0 items-center justify-center py-4 sm:py-8">
+            <div class="card card-sm w-full max-w-md overflow-hidden">
+                <div class="card bg-base-200 card-border border-base-300 card-sm overflow-hidden">
                     <div class="border-base-300 border-b border-dashed">
                         <div class="flex items-center gap-2 p-4">
                             <div class="grow">
@@ -35,9 +35,10 @@ const page = usePage();
                             <input name="remember" type="checkbox" class="toggle toggle-xs" checked>
                             Lembrar de mim
                         </label>
-                        <div class="card-actions flex items-center justify-center gap-6 flex-col">
-                            <button class="btn btn-neutral">Entrar</button>
-                            <Link :href="page.props.urls['cadastrar']">Não tem conta? Cadastrar</Link>
+                        <div class="card-actions flex flex-col items-center justify-center gap-4">
+                            <button class="btn btn-neutral btn-block">Entrar</button>
+                            <Link :href="page.props.urls['cadastrar']" class="link link-hover">Não tem conta? Cadastrar
+                            </Link>
                         </div>
                     </Form>
                 </div>
