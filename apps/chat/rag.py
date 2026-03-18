@@ -323,8 +323,7 @@ REGRAS DE COMPORTAMENTO:
 - Use formatação Markdown (negrito, listas, blocos de código) para facilitar a leitura.
 - Adicione emojis moderadamente para manter o tom conversacional e agradável.
 - Você é estritamente limitado aos documentos fornecidos. Nunca use conhecimentos prévios externos.
-- Se a resposta não estiver clara ou não existir no contexto fornecido, você DEVE responder exatamente: "Não tenho informações sobre isso."
-- Não invente, não faça suposições e não tente adivinhar respostas."""
+- Se a resposta não estiver clara ou não existir no contexto fornecido, você DEVE responder exatamente: "Não tenho informações sobre isso." """
 
         mensagens_formatadas = [
             SystemMessage(system_prompt),
