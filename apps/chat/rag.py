@@ -314,29 +314,41 @@ class Rag:
     ) -> Generator[str, None, None]:
         contexto = '\n\n\n'.join(Rag.top_k_chunks(query, k=10))
 
-        mensagens = [
-            SystemMessage('Responda em português.'),
-            SystemMessage('Responda utilizando Markdown.'),
-            SystemMessage('Adicione emojis quando fizer sentido.'),
-            SystemMessage(
-                (
-                    f'Você é uma IA que auxilia pessoas com informações que estão no contexto. '
-                    f'Sua resposta deve se basear **exclusivamente** nas informações do contexto abaixo:'
-                    f'\n\n{contexto}\n\n'
-                    '⚠️ Regras importantes:\n'
-                    '- Se a resposta não estiver clara ou presente no contexto, responda exatamente: "Não tenho informações sobre isso".\n'
-                    '- Não invente, não faça suposições e não utilize conhecimento externo ao contexto.\n'
-                    '- Antes de responder, verifique cuidadosamente se a informação está no contexto.\n'
-                )
-            ),
+        # 1. System Prompt Consolidado e com Persona Forte
+        system_prompt = """Você é um assistente corporativo especialista em análise documental.
+Sua missão é responder às perguntas dos usuários de forma precisa, clara e amigável.
+
+REGRAS DE COMPORTAMENTO:
+- Responda SEMPRE em português.
+- Use formatação Markdown (negrito, listas, blocos de código) para facilitar a leitura.
+- Adicione emojis moderadamente para manter o tom conversacional e agradável.
+- Você é estritamente limitado aos documentos fornecidos. Nunca use conhecimentos prévios externos.
+- Se a resposta não estiver clara ou não existir no contexto fornecido, você DEVE responder exatamente: "Não tenho informações sobre isso."
+- Não invente, não faça suposições e não tente adivinhar respostas."""
+
+        mensagens_formatadas = [
+            SystemMessage(system_prompt),
             *[
                 HumanMessage(m.conteudo)
                 if m.tipo == Mensagem.OpcoesTipo.USUARIO
                 else AIMessage(m.conteudo)
                 for m in mensagens
             ],
-            HumanMessage(query),
         ]
 
-        for resposta in Rag.chat.stream(mensagens):
+        # 2. Injeção do Contexto com Tags XML (Ajuda a IA a separar as coisas)
+        # O contexto entra no final, colado com a pergunta, para evitar o "viés de recência"
+        prompt_final_usuario = f"""Aqui está o documento de referência para a sua resposta:
+
+<contexto>
+{contexto}
+</contexto>
+
+Baseando-se EXCLUSIVAMENTE no conteúdo dentro da tag <contexto> acima, responda à minha pergunta:
+
+{query}"""
+
+        mensagens_formatadas.append(HumanMessage(prompt_final_usuario))
+
+        for resposta in Rag.chat.stream(mensagens_formatadas):
             yield resposta.content
