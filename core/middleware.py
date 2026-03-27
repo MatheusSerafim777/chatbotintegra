@@ -1,6 +1,6 @@
 import sys
 
-from django.contrib.gis.db.models import Max
+from django.db.models import Max
 
 from chat.models import Conversa
 from django.contrib.messages import get_messages
