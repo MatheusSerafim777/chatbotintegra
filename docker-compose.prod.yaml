@@ -1,5 +1,5 @@
 services:
-  web:
+  chatbot-integracar:
     build:
       context: .
       dockerfile: prod.Dockerfile
@@ -15,6 +15,7 @@ services:
         condition: service_healthy
     networks:
       - app-network
+      - proxy
 
   qcluster:
     build:
@@ -56,43 +57,14 @@ services:
       retries: 10
     restart: unless-stopped
 
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx:/etc/nginx/conf.d:ro
-      - static_volume:/code/static:ro
-      - app_shared:/code/media:ro
-      - certbot_www:/var/www/certbot
-      - certbot_conf:/etc/letsencrypt
-    depends_on:
-      - web
-    networks:
-      - app-network
-    restart: unless-stopped
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - certbot_www:/var/www/certbot
-      - certbot_conf:/etc/letsencrypt
-    command: certonly --webroot
-      -w /var/www/certbot
-      --email evandro.rsneto@gmail.com
-      --agree-tos
-      --no-eff-email
-      -d chatbotintegracar.online
-      -d www.chatbotintegracar.online
-
 networks:
   app-network:
     driver: bridge
+
+  proxy:
+    external: true
 
 volumes:
   app_shared:
   postgres_data:
   static_volume:
-  certbot_www:
-  certbot_conf:
