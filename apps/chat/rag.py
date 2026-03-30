@@ -350,4 +350,4 @@ REGRAS DE COMPORTAMENTO:
         mensagens_formatadas.append(HumanMessage(prompt_final_usuario))
 
         for resposta in Rag.chat.stream(mensagens_formatadas):
-            yield resposta
+            yield resposta.content
