@@ -254,7 +254,7 @@ onUnmounted(() => {
                 <div class="flex w-full max-h-52 items-center overflow-y-auto">
                     <div ref="editable" autofocus="true" id="pergunta" contenteditable="true" role="textbox"
                         aria-multiline="true"
-                        class="min-h-6 w-full wrap-break-word bg-transparent py-1 font-medium whitespace-pre-wrap focus:outline-none"
+                        class="min-h-6 w-full wrap-break-word bg-transparent py-1 px-1 font-medium whitespace-pre-wrap focus:outline-none"
                         @input="pergunta = editable?.innerText ?? ''"
                         @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }"
                         @paste="handlePaste">

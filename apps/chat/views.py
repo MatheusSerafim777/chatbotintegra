@@ -63,7 +63,7 @@ class ConversaView(BaseChatView):
             )
 
         conversa = get_object_or_404(qs, id=id_conversa)
-        
+
         conversa.visitada_em = timezone.now()
         conversa.save(update_fields=['visitada_em'])
 

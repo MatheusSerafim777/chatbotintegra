@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from django.utils import timezone
-
 from contas.models import Usuario
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import Field
 from django.db.models.lookups import PostgresOperatorLookup
+from django.utils import timezone
 from pgvector.django import VectorField
 
 from chat.indexes import BM25Index

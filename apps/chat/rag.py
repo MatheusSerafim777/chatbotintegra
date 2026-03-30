@@ -1,8 +1,8 @@
 import logging
 import re
+import unicodedata
 from collections import defaultdict
 from typing import Generator, Literal, TypedDict
-import unicodedata
 
 import httpx
 from django.conf import settings
@@ -30,20 +30,19 @@ class ClassificacaoResponse(TypedDict):
     confianca: float
 
 
-
-
 def normalize(text: str) -> str:
-    STOPWORDS = {"a", "o", "e", "de", "da", "do", "para", "em"}
+    STOPWORDS = {'a', 'o', 'e', 'de', 'da', 'do', 'para', 'em'}
     text = text.lower()
-    text = unicodedata.normalize("NFD", text)
-    text = "".join(c for c in text if unicodedata.category(c) != "Mn")
-    text = re.sub(r"[^\w\s]", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
+    text = unicodedata.normalize('NFD', text)
+    text = ''.join(c for c in text if unicodedata.category(c) != 'Mn')
+    text = re.sub(r'[^\w\s]', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
 
     tokens = text.split()
     tokens = [t for t in tokens if t not in STOPWORDS]
 
-    return " ".join(tokens)
+    return ' '.join(tokens)
+
 
 class Rag:
     chat = ChatOpenAI(
@@ -245,9 +244,7 @@ class Rag:
             )
             .filter(
                 conteudo__bm25=PdbQueryCast(
-                    Value(
-                        f'{{"match": {{"value": "{normalize(query)}"}}}}'
-                    )
+                    Value(f'{{"match": {{"value": "{normalize(query)}"}}}}')
                 )
             )
             .order_by('-score')
@@ -286,18 +283,22 @@ class Rag:
         semantic_weight = 0.5
         combinado = []
 
-        RRF_CONSTANT = 60 
+        RRF_CONSTANT = 60
 
         for chunks in agrupado.values():
             rank_bm25 = next((c.rank for t, c in chunks if t == 'bm25'), None)
-            rank_sem = next((c.rank for t, c in chunks if t == 'semantic'), None)
+            rank_sem = next(
+                (c.rank for t, c in chunks if t == 'semantic'), None
+            )
 
             # Se não foi encontrado em um dos métodos, o score daquele método é 0
             score_bm25 = 1.0 / (RRF_CONSTANT + rank_bm25) if rank_bm25 else 0.0
             score_sem = 1.0 / (RRF_CONSTANT + rank_sem) if rank_sem else 0.0
 
             # Você pode manter seus pesos se quiser dar mais força para a semântica ou exata
-            total_score = (bm25_weight * score_bm25) + (semantic_weight * score_sem)
+            total_score = (bm25_weight * score_bm25) + (
+                semantic_weight * score_sem
+            )
 
             representante = chunks[0][1]
             representante.score = total_score

@@ -7,16 +7,16 @@ const page = usePage();
 <template>
     <div class="min-h-dvh flex flex-col">
         <!-- Navbar fixa -->
-        <div class="bg-base-300/95 shadow-sm sticky top-0 z-20 border-b border-base-content/10 backdrop-blur">
+        <div class="bg-linear-to-r/shorter from-neutral to-base-300 shadow-sm sticky top-0 z-20 border-b border-base-content/10 backdrop-blur">
             <div class="navbar mx-auto w-full max-w-5xl px-3 sm:px-4">
                 <div class="flex-1">
-                    <Link :href="page.props.urls['index']" class="btn btn-ghost text-base sm:text-xl gap-2 normal-case">
+                    <Link :href="page.props.urls['index']" class="flex items-center gap-2 p-0 text-white">
                         <IntegracarLogo />
                         Chatbot IntegraCAR
                     </Link>
                 </div>
                 <div class="flex gap-2 sm:gap-3">
-                    <Link :href="page.props.urls['cadastrar']" class="btn btn-ghost btn-sm sm:btn-md">Cadastrar</Link>
+                    <Link :href="page.props.urls['cadastrar']" class="btn btn-ghost btn-sm sm:btn-md text-white">Cadastrar</Link>
                     <Link :href="page.props.urls['entrar']" class="btn btn-neutral btn-sm sm:btn-md">Entrar</Link>
                 </div>
             </div>

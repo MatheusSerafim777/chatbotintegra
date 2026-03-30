@@ -4,7 +4,6 @@ from django.utils.safestring import mark_safe
 
 from chat.models import ChunkDocumeto, Conversa, Documento, Mensagem
 
-
 admin.site.register(Documento)
 admin.site.register(Mensagem)
 
@@ -14,10 +13,9 @@ class ChunkDocumentoAdmin(admin.ModelAdmin):
     list_display = ('id', 'documento')
     ordering = ('id',)
     search_fields = ['conteudo']
-    
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('documento')
-
 
 
 @admin.register(Conversa)

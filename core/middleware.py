@@ -1,9 +1,8 @@
 import sys
 
-from django.db.models import Max
-
 from chat.models import Conversa
 from django.contrib.messages import get_messages
+from django.db.models import Max
 from django.http import HttpRequest
 from django.urls import get_resolver
 from inertia import share
@@ -53,9 +52,11 @@ class DataShareMiddleware(object):
 
         conversas = []
         if request.user.is_authenticated:
-            conversas = Conversa.objects.filter(usuario=request.user).annotate(
-            ultima_mensagem_at=Max('mensagens__criado_em')
-        ).order_by('-ultima_mensagem_at')
+            conversas = (
+                Conversa.objects.filter(usuario=request.user)
+                .annotate(ultima_mensagem_at=Max('mensagens__criado_em'))
+                .order_by('-ultima_mensagem_at')
+            )
 
         share(
             request,
