@@ -313,7 +313,7 @@ class Rag:
         query: str,
         mensagens: QuerySet[Mensagem],
     ) -> Generator[str, None, None]:
-        contexto = '\n\n\n'.join(Rag.top_k_chunks(query, k=10))
+        contexto = '\n\n\n'.join(Rag.top_k_chunks(query, k=30))
 
         # 1. System Prompt Consolidado e com Persona Forte
         system_prompt = """Você é um assistente corporativo especialista em análise documental.
