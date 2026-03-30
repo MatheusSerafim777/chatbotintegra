@@ -16,6 +16,7 @@ from django.db.models.functions import Rank
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_ollama.llms import OllamaLLM
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pgvector.django import CosineDistance
 
@@ -345,11 +346,9 @@ REGRAS DE COMPORTAMENTO:
 {contexto}
 </contexto>
 
-Baseando-se EXCLUSIVAMENTE no conteúdo dentro da tag <contexto> acima, responda à minha pergunta:
-
 {query}"""
 
         mensagens_formatadas.append(HumanMessage(prompt_final_usuario))
 
         for resposta in Rag.chat.stream(mensagens_formatadas):
-            yield resposta.content
+            yield resposta

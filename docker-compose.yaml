@@ -5,7 +5,7 @@ services:
       dockerfile: dev.Dockerfile
     volumes:
       - app_shared:/app/media
-    command: uv run python -u manage.py runserver 0.0.0.0:8000
+    command: python -u manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
     env_file:
@@ -33,7 +33,7 @@ services:
       dockerfile: dev.Dockerfile
     volumes:
       - app_shared:/app/media
-    command: uv run python -u manage.py qcluster
+    command: python -u manage.py qcluster
     env_file:
       - ./.env
     restart: unless-stopped
