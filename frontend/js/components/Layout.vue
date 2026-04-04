@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import IntegracarLogo from './IntegracarLogo.vue';
 import { Conversa, Usuario } from '@/types/index';
@@ -25,9 +25,12 @@ const isActive = (href: string): boolean => {
 const deleteModal = ref<HTMLDialogElement | null>(null);
 const conversaParaExcluir = ref<Conversa | null>(null);
 const sidebarToggle = ref<HTMLInputElement | null>(null);
+const deleteConfirmButton = ref<HTMLButtonElement | null>(null);
+let mediaQuery: MediaQueryList | null = null;
+let mediaQueryHandler: ((event: MediaQueryListEvent) => void) | null = null;
 
 onMounted(() => {
-    const mediaQuery = window.matchMedia('(min-width: 1024px)');
+    mediaQuery = window.matchMedia('(min-width: 1024px)');
 
     const syncSidebarState = (isLargeScreen: boolean) => {
         if (sidebarToggle.value) {
@@ -36,7 +39,14 @@ onMounted(() => {
     };
 
     syncSidebarState(mediaQuery.matches);
-    mediaQuery.addEventListener('change', (event) => syncSidebarState(event.matches));
+    mediaQueryHandler = (event: MediaQueryListEvent) => syncSidebarState(event.matches);
+    mediaQuery.addEventListener('change', mediaQueryHandler);
+});
+
+onUnmounted(() => {
+    if (mediaQuery && mediaQueryHandler) {
+        mediaQuery.removeEventListener('change', mediaQueryHandler);
+    }
 });
 
 const abrirModalExcluir = (conversa: Conversa, event: Event) => {
@@ -44,6 +54,7 @@ const abrirModalExcluir = (conversa: Conversa, event: Event) => {
     event.stopPropagation();
     conversaParaExcluir.value = conversa;
     deleteModal.value?.showModal();
+    setTimeout(() => deleteConfirmButton.value?.focus(), 0);
 };
 
 const confirmarExclusao = () => {
@@ -62,6 +73,13 @@ const cancelarExclusao = () => {
     deleteModal.value?.close();
     conversaParaExcluir.value = null;
 };
+
+function fecharSidebarEmTelaPequena() {
+    if (!sidebarToggle.value) return;
+    if (window.innerWidth < 1024) {
+        sidebarToggle.value.checked = false;
+    }
+}
 </script>
 
 <template>
@@ -71,7 +89,7 @@ const cancelarExclusao = () => {
             <!-- Navbar -->
             <nav
                 class="navbar sticky top-0 z-20 w-full border-b border-base-content/10 bg-linear-to-r/shorter from-neutral to-base-300 text-secondary-content">
-                <label for="sidebar" aria-label="open sidebar" class="btn btn-square btn-ghost">
+                <label for="sidebar" aria-label="Abrir barra lateral" class="btn btn-square btn-ghost">
                     <i class="bi bi-layout-sidebar text-xl"></i>
                 </label>
                 <div class="px-4">
@@ -90,31 +108,34 @@ const cancelarExclusao = () => {
         </div>
 
         <div class="drawer-side is-drawer-close:overflow-visible z-50">
-            <label for="sidebar" aria-label="close sidebar" class="drawer-overlay"></label>
+            <label for="sidebar" aria-label="Fechar barra lateral" class="drawer-overlay"></label>
             <div
                 class="flex h-full min-h-full flex-col overflow-visible border-r border-base-content/20 bg-neutral text-neutral-content is-drawer-close:w-14 is-drawer-open:w-72">
-                <ul class="menu w-full shrink-0">
-                    <div class="h-14"></div>
+                <ul class="menu w-full shrink-0 gap-1 px-2 pt-2">
+                    <div class="h-2"></div>
                     <li>
                         <Link :href="page.props.urls['index']"
-                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg text-nowrap"
-                            :class="{ 'bg-accent': isActive(page.props.urls['index']) }" data-tip="Nova Conversa">
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-xl border border-transparent px-2 text-nowrap"
+                            :class="{ 'bg-accent': isActive(page.props.urls['index']) }" data-tip="Nova Conversa"
+                            @click="fecharSidebarEmTelaPequena">
                             <i class="bi bi-pencil-square"></i>
                             <span class="is-drawer-close:hidden">Nova Conversa</span>
                         </Link>
                     </li>
                     <li v-if="page.props.user.is_staff">
                         <Link :href="page.props.urls['documentos']"
-                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg text-nowrap"
-                            :class="{ 'bg-accent': isActive(page.props.urls['documentos']) }" data-tip="Documentos">
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-xl border border-transparent px-2 text-nowrap"
+                            :class="{ 'bg-accent': isActive(page.props.urls['documentos']) }" data-tip="Documentos"
+                            @click="fecharSidebarEmTelaPequena">
                             <i class="bi bi-file-earmark-text"></i>
                             <span class="is-drawer-close:hidden">Documentos</span>
                         </Link>
                     </li>
                     <li v-if="page.props.user.is_staff">
                         <Link :href="page.props.urls['curadoria']"
-                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-lg text-nowrap"
-                            :class="{ 'bg-accent': isActive(page.props.urls['curadoria']) }" data-tip="Curadoria">
+                            class="is-drawer-close:tooltip is-drawer-close:tooltip-right rounded-xl border border-transparent px-2 text-nowrap"
+                            :class="{ 'bg-accent': isActive(page.props.urls['curadoria']) }" data-tip="Curadoria"
+                            @click="fecharSidebarEmTelaPequena">
                             <i class="bi bi-robot"></i>
                             <span class="is-drawer-close:hidden">Curadoria</span>
                         </Link>
@@ -123,15 +144,19 @@ const cancelarExclusao = () => {
 
                 <hr class="my-2">
                 <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain is-drawer-close:hidden">
-                    <ul class="menu w-full">
+                    <ul class="menu w-full gap-1 px-2">
                         <li class="is-drawer-close:hidden" v-for="conversa in page.props.conversas" :key="conversa.id">
                             <Link :href="page.props.urls['conversa'].replace('%(id_conversa)s', conversa.id.toString())"
-                                class="rounded-lg hover:bg-secondary/80 group flex items-center justify-between gap-2 text-nowrap"
-                                :class="{ 'bg-accent': isActive(page.props.urls['conversa'].replace('%(id_conversa)s', conversa.id.toString())) }">
+                                class="group flex items-center justify-between gap-2 rounded-xl border border-transparent px-2 py-1.5 text-nowrap hover:bg-secondary/80 focus-visible:border-base-100/70"
+                                :class="{ 'bg-accent': isActive(page.props.urls['conversa'].replace('%(id_conversa)s', conversa.id.toString())) }"
+                                @click="fecharSidebarEmTelaPequena">
                                 <span class="truncate is-drawer-close:hidden">{{ conversa.nome }}</span>
                                 <i class="bi bi-chat-left-text is-drawer-open:hidden"></i>
-                                <button @click="abrirModalExcluir(conversa, $event)"
-                                    class="btn btn-ghost btn-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+                                <button
+                                    @click="abrirModalExcluir(conversa, $event)"
+                                    class="btn btn-ghost btn-xs btn-circle opacity-0 transition-opacity duration-150 pointer-events-none group-hover:opacity-90 group-hover:pointer-events-auto"
+                                    aria-label="Excluir conversa"
+                                    title="Excluir conversa">
                                     <i class="bi bi-trash-fill"></i>
                                 </button>
                             </Link>
@@ -150,7 +175,7 @@ const cancelarExclusao = () => {
                             <ul tabindex="-1"
                                 class="dropdown-content menu bg-base-300 text-base-content rounded-box w-60 p-2 shadow-sm ">
                                 <li>
-                                    <Link :href="page.props.urls['sair']" method="post">
+                                    <Link :href="page.props.urls['sair']" method="post" @click="fecharSidebarEmTelaPequena">
                                         <i class="bi bi-box-arrow-right text-error"> </i>
                                         Sair
                                     </Link>
@@ -171,8 +196,11 @@ const cancelarExclusao = () => {
             <p class="py-4">Tem certeza que deseja excluir a conversa "{{ conversaParaExcluir?.nome }}"?</p>
             <div class="modal-action">
                 <button class="btn" @click="cancelarExclusao">Cancelar</button>
-                <button class="btn btn-error" @click="confirmarExclusao">Excluir</button>
+                <button ref="deleteConfirmButton" class="btn btn-error" @click="confirmarExclusao">Excluir</button>
             </div>
         </div>
+        <form method="dialog" class="modal-backdrop">
+            <button @click="cancelarExclusao">close</button>
+        </form>
     </dialog>
 </template>

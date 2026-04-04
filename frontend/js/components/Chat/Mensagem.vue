@@ -38,6 +38,7 @@ const mensagemSelecionada = computed(() => {
 const mensagemFilhaRef = ref<typeof Mensagem | null>(null);
 
 function obterIdUltimaMensagem(): number {
+    if (!mensagemSelecionada.value) return props.ids[0];
     if (mensagemSelecionada.value.mensagens_filhas.length === 0) return mensagemSelecionada.value.id;
     return mensagemFilhaRef.value?.obterIdUltimaMensagem() || mensagemSelecionada.value.id;
 }

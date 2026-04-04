@@ -16,8 +16,8 @@ const page = usePage<{
 
 <template>
     <LayoutAnonimo>
-        <div class="flex grow min-h-0 items-center justify-center py-4 sm:py-8">
-            <div class="card bg-base-200 card-border border-base-300 card-sm w-full max-w-md">
+        <div class="mx-auto flex w-full max-w-5xl grow min-h-0 items-center justify-center py-4 sm:py-8">
+            <div class="card bg-base-200 card-border border-base-300 card-sm w-full max-w-md rounded-3xl shadow-sm">
                 <div class="border-base-300 border-b border-dashed">
                     <div class="flex items-center gap-2 p-4">
                         <div class="grow">
@@ -28,7 +28,7 @@ const page = usePage<{
                         </div>
                     </div>
                 </div>
-                <Form :action="page.props.urls['cadastrar']" method="post" class="card-body gap-4">
+                <Form :action="page.props.urls['cadastrar']" method="post" class="card-body gap-4 sm:gap-5">
                     <p class="text-xs opacity-60">Faça seu cadastro</p>
 
                     <DjangoForm :form="form" />
@@ -39,7 +39,7 @@ const page = usePage<{
                         Lembrar de mim
                     </label>
 
-                    <div class="card-actions flex flex-col items-center justify-center gap-4">
+                    <div class="card-actions flex flex-col items-center justify-center gap-3">
                         <button class="btn btn-neutral btn-block">Cadastrar</button>
                         <Link :href="page.props.urls['entrar']" class="link link-hover">Já tem conta? Entrar</Link>
                     </div>

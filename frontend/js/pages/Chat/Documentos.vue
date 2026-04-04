@@ -26,7 +26,7 @@ function confirmarExclusao() {
 
 function cancelarExclusao() {
     modalExclusao.value?.close();
-    // documentoParaExcluir.value = null;
+    documentoParaExcluir.value = null;
 }
 
 function abrirModalImportacao() {
@@ -169,15 +169,15 @@ async function atualizarTipoDocumento(documento: Documento, novoTipo: string) {
     <Layout>
         <div class="mx-auto w-full max-w-5xl space-y-4 p-3 sm:p-4">
             <div class="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
-                <div class="rounded bg-base-300 p-3 flex flex-col items-center justify-center">
+                <div class="rounded-2xl border border-base-content/10 bg-base-300 p-3 flex flex-col items-center justify-center">
                     <p class="label">Documentos processados</p>
                     <p class="font-bold text-2xl">{{ qtdDocumentosProcessados }}</p>
                 </div>
-                <div class="rounded bg-base-300 p-3 flex flex-col items-center justify-center">
+                <div class="rounded-2xl border border-base-content/10 bg-base-300 p-3 flex flex-col items-center justify-center">
                     <p class="label">Documentos pendentes</p>
                     <p class="font-bold text-2xl">{{ qtdDocumentosPendentes }}</p>
                 </div>
-                <div class="rounded p-2 flex items-center justify-center">
+                <div class="rounded-2xl p-2 flex items-center justify-center">
                     <button @click="abrirModalImportacao" class="btn btn-primary btn-block md:btn-wide">
                         <i class="bi bi-plus-lg"></i>
                         Adicionar Documentos
@@ -185,8 +185,7 @@ async function atualizarTipoDocumento(documento: Documento, novoTipo: string) {
                 </div>
             </div>
 
-
-            <div class="overflow-x-auto rounded-lg border border-base-content/10 bg-base-100">
+            <div class="hidden overflow-x-auto rounded-2xl border border-base-content/10 bg-base-100 sm:block">
                 <table class="table table-zebra table-auto">
                     <thead>
                         <tr>
@@ -239,7 +238,48 @@ async function atualizarTipoDocumento(documento: Documento, novoTipo: string) {
                         </tr>
                     </tbody>
                 </table>
+            </div>
 
+            <div class="space-y-2 sm:hidden">
+                <article v-for="documento in documentos" :key="documento.id"
+                    class="rounded-2xl border border-base-content/10 bg-base-100 p-3 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-xs opacity-70">ID {{ documento.id }}</p>
+                            <p class="truncate font-medium">{{ documento.nome }}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <a :href="documento.arquivo.url" target="_blank" aria-label="Visualizar documento">
+                                <i class="bi bi-eye-fill text-neutral"></i>
+                            </a>
+                            <button @click="abrirModalExclusao(documento)" class="cursor-pointer"
+                                aria-label="Excluir documento">
+                                <i class="bi bi-trash3-fill text-error"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-2">
+                        <div>
+                            <span v-if="documento.status === 'erro'" class="badge badge-error text-error-content">
+                                Erro
+                            </span>
+                            <span v-else-if="documento.status === 'processado'" class="badge badge-success text-success-content">
+                                Processado
+                            </span>
+                            <span v-else-if="documento.status === 'processando'" class="badge badge-warning text-warning-content">
+                                Processando
+                            </span>
+                            <span v-else class="badge badge-neutral">
+                                Pendente
+                            </span>
+                        </div>
+                        <select v-model="documento.tipo" @change="atualizarTipoDocumento(documento, documento.tipo)"
+                            class="select select-bordered select-xs w-36">
+                            <option value="manual">Manual</option>
+                            <option value="legislacao">Legislação</option>
+                        </select>
+                    </div>
+                </article>
             </div>
 
             <!-- Modal de importação -->
