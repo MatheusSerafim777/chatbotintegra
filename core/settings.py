@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # Third party apps
     'django_vite',
     'inertia',
+    'import_export',
     'django_q',
     # Local apps
     'contas',

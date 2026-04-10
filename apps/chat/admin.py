@@ -1,12 +1,33 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin
 
 from chat.models import ChunkDocumeto, Conversa, Documento, Mensagem
 
+
+class MensagemResource(resources.ModelResource):
+    class Meta:
+        model = Mensagem
+        fields = (
+            'id',
+            'conversa',
+            'mensagem_pai',
+            'resposta_canonica',
+            'conteudo',
+            'tipo',
+            'curtido',
+            'criado_em',
+            'created_at',
+            'updated_at',
+        )
+        export_order = fields
+
 admin.site.register(Documento)
 @admin.register(Mensagem)
-class MensagemAdmin(admin.ModelAdmin):
+class MensagemAdmin(ImportExportModelAdmin):
+    resource_class = MensagemResource
     list_display = (
         'id',
         'conversa',
