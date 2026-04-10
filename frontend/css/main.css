@@ -50,6 +50,24 @@ body,
     width: 100%;
 }
 
+:focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-base-content) 42%, transparent);
+    outline-offset: 2px;
+}
+
+.chat-scroll-area {
+    scroll-padding-bottom: 7rem;
+}
+
+.chat-input-editor {
+    max-height: 13rem;
+    overflow-y: hidden;
+}
+
+.chat-input-editor:empty::before {
+    content: "";
+}
+
 /* Cabeçalhos */
 .markdown h1,
 .markdown h2,
@@ -194,4 +212,10 @@ body,
 .markdown th {
     background-color: var(--color-base-200);
     font-weight: bold;
+}
+
+@media (max-width: 640px) {
+    .markdown {
+        font-size: 0.95rem;
+    }
 }

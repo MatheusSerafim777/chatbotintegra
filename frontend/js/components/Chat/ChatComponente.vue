@@ -30,13 +30,21 @@ const page = usePage<{
 }>();
 
 const mapMensagens = ref<MapMensagens>(page.props.map_mensagens ?? {});
-
 const idConversa = ref<number | null>(page.props.id_conversa ?? null);
 const pergunta = ref('');
 const enviandoMensagem = ref(false);
+const erroEnvio = ref('');
 const editable = ref<HTMLElement | null>(null);
 const containerMensagens = ref<HTMLElement | null>(null);
 const mensagemRef = ref<typeof Mensagem | null>(null);
+
+const perguntasSugeridas = [
+    'Quais documentos eu preciso para iniciar o CAR?',
+    'Como preencher área de APP no CAR?',
+    'Qual a diferença entre Reserva Legal e APP?'
+];
+
+const temMensagens = computed(() => Object.keys(mapMensagens.value).length > 0);
 
 function focarInputMensagem(cursorNoFinal = true) {
     if (!editable.value) return;
@@ -54,6 +62,26 @@ function focarInputMensagem(cursorNoFinal = true) {
     selection.addRange(range);
 }
 
+function ajustarAlturaEditable() {
+    if (!editable.value) return;
+
+    editable.value.style.height = 'auto';
+    const maxHeight = 208;
+    const novaAltura = Math.min(editable.value.scrollHeight, maxHeight);
+    editable.value.style.height = `${Math.max(novaAltura, 24)}px`;
+    editable.value.style.overflowY = editable.value.scrollHeight > maxHeight ? 'auto' : 'hidden';
+}
+
+function setPergunta(valor: string) {
+    pergunta.value = valor;
+    if (!editable.value) return;
+    editable.value.textContent = valor;
+    nextTick(() => {
+        ajustarAlturaEditable();
+        focarInputMensagem();
+    });
+}
+
 const handleWindowFocus = () => {
     focarInputMensagem();
 };
@@ -62,7 +90,7 @@ const mensagensRaiz = computed<number[]>(
     () =>
         Object.values(mapMensagens.value)
             .filter(mensagem => mensagem.mensagem_pai === null)
-            .map(mensagem => mensagem.id!)
+            .map(mensagem => mensagem.id)
 );
 
 watch(
@@ -75,7 +103,7 @@ watch(
             }
         }
     }
-)
+);
 
 async function adicionarMensagem(mensagem: TMensagem) {
     mapMensagens.value[mensagem.id] = mensagem;
@@ -83,46 +111,52 @@ async function adicionarMensagem(mensagem: TMensagem) {
     scrollParaUltimaMensagem();
 }
 
-const enviarMensagem = async () => {
+function limparInput() {
+    pergunta.value = '';
+    if (editable.value) {
+        editable.value.textContent = '';
+        ajustarAlturaEditable();
+    }
+}
+
+async function enviarMensagem() {
     if (!pergunta.value.trim() || enviandoMensagem.value) return;
 
+    erroEnvio.value = '';
     enviandoMensagem.value = true;
-    const mensagemPaiSelecionada: number | null = mensagensRaiz.value.length > 0 ? mensagemRef.value?.obterIdUltimaMensagem() : null;
+    const mensagemPaiSelecionada: number | null = mensagensRaiz.value.length > 0 ? mensagemRef.value?.obterIdUltimaMensagem() ?? null : null;
     const mensagemUsuario: TMensagem = {
-        id: Date.now() + Math.random(),
+        id: Date.now() + Math.floor(Math.random() * 1000),
         tipo: 'USUARIO',
-        conteudo: pergunta.value,
+        conteudo: pergunta.value.trim(),
         mensagem_pai: mensagemPaiSelecionada,
         mensagens_filhas: [],
         curtido: null,
     };
+
     if (mensagemPaiSelecionada !== null) {
         mapMensagens.value[mensagemPaiSelecionada].mensagens_filhas.push(mensagemUsuario.id);
     }
+
     await adicionarMensagem(mensagemUsuario);
 
-
     const lastUserMessage = pergunta.value;
-    pergunta.value = '';
-    if (editable.value) {
-        editable.value.textContent = '';
-    }
+    limparInput();
     await nextTick();
     focarInputMensagem(false);
 
-    // mensagem vazia do bot
     const botMessage: TMensagem = {
-        id: Date.now() + Math.random(),
+        id: Date.now() + Math.floor(Math.random() * 1000) + 1,
         tipo: 'ASSISTENTE',
         conteudo: '',
         mensagem_pai: mensagemUsuario.id,
         mensagens_filhas: [],
         curtido: null,
     };
+
     mapMensagens.value[mensagemUsuario.id].mensagens_filhas.push(botMessage.id);
     await adicionarMensagem(botMessage);
 
-    // Agora começa o streaming
     const payload = {
         mensagem: lastUserMessage,
         stream: true,
@@ -141,8 +175,10 @@ const enviarMensagem = async () => {
 
         if (!response.body) {
             mapMensagens.value[botMessage.id].conteudo = 'Não foi possível obter resposta do assistente.';
+            erroEnvio.value = 'Falha de conexão com o assistente.';
             return;
         }
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
@@ -157,14 +193,12 @@ const enviarMensagem = async () => {
                 const dados: chatResponse = JSON.parse(decoder.decode(value));
                 idConversa.value = dados.id_conversa;
 
-                // Atualiza o ID da mensagem do usuário
                 const idAntigoUsuario = mensagemUsuario.id;
                 const novoIdUsuario = dados.id_mensagem_pergunta;
                 mensagemUsuario.id = novoIdUsuario;
                 delete mapMensagens.value[idAntigoUsuario];
                 mapMensagens.value[novoIdUsuario] = mensagemUsuario;
 
-                // Atualiza a referência na mensagem pai
                 if (mensagemPaiSelecionada !== null) {
                     const filhas = mapMensagens.value[mensagemPaiSelecionada].mensagens_filhas;
                     const index = filhas.indexOf(idAntigoUsuario);
@@ -173,7 +207,6 @@ const enviarMensagem = async () => {
                     }
                 }
 
-                // Atualiza o ID da mensagem do bot
                 const idAntigoBot = botMessage.id;
                 const novoIdBot = dados.id_mensagem_resposta;
                 botMessage.id = novoIdBot;
@@ -182,7 +215,6 @@ const enviarMensagem = async () => {
                 mapMensagens.value[novoIdBot] = botMessage;
                 idMensagemBot = novoIdBot;
 
-                // Atualiza a referência na mensagem do usuário
                 const filhasUsuario = mapMensagens.value[novoIdUsuario].mensagens_filhas;
                 const indexBot = filhasUsuario.indexOf(idAntigoBot);
                 if (indexBot !== -1) {
@@ -191,11 +223,13 @@ const enviarMensagem = async () => {
 
                 continue;
             }
+
             mapMensagens.value[idMensagemBot].conteudo += decoder.decode(value);
             scrollParaUltimaMensagem();
         }
     } catch (error) {
         botMessage.conteudo = 'Ocorreu um erro ao enviar sua mensagem. Tente novamente.';
+        erroEnvio.value = 'Não foi possível enviar sua pergunta agora.';
     } finally {
         enviandoMensagem.value = false;
         await nextTick();
@@ -203,20 +237,31 @@ const enviarMensagem = async () => {
     }
 }
 
-
 function handlePaste(e: ClipboardEvent) {
-    e.preventDefault()
-    const text = e.clipboardData?.getData('text/plain') || ''
-    document.execCommand('insertText', false, text)
+    e.preventDefault();
+    const text = e.clipboardData?.getData('text/plain') || '';
+    document.execCommand('insertText', false, text);
+}
+
+function handleInput() {
+    pergunta.value = editable.value?.innerText ?? '';
+    ajustarAlturaEditable();
+}
+
+function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        enviarMensagem();
+    }
 }
 
 function scrollParaUltimaMensagem(smooth = true) {
-    const div = containerMensagens.value
+    const div = containerMensagens.value;
     if (div) {
         div.scrollTo({
             top: div.scrollHeight,
             behavior: smooth ? 'smooth' : 'auto',
-        })
+        });
     }
 }
 
@@ -224,6 +269,7 @@ onMounted(async () => {
     await nextTick();
     scrollParaUltimaMensagem(false);
     focarInputMensagem();
+    ajustarAlturaEditable();
 
     window.addEventListener('focus', handleWindowFocus);
 });
@@ -234,39 +280,53 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="mx-auto flex h-full w-full max-w-5xl flex-1 flex-col justify-between gap-3 pb-2 pt-3 sm:gap-4 sm:pb-4">
-        <div class="min-h-0 flex-1 overflow-y-auto px-1" ref="containerMensagens">
-            <div class="mx-auto w-full max-w-3xl space-y-3 pb-1">
+    <div class="mx-auto flex h-full w-full max-w-5xl flex-1 flex-col px-2 pb-2 pt-3 sm:px-4 sm:pb-4">
+        <div ref="containerMensagens" class="min-h-0 flex-1 overflow-y-auto pr-1 chat-scroll-area" aria-live="polite">
+            <div class="mx-auto w-full max-w-3xl space-y-4 pb-4">
+                <div v-if="!temMensagens"
+                    class="rounded-3xl border border-base-content/10 bg-base-100 p-5 shadow-sm sm:p-6">
+                    <div class="space-y-3">
+                        <h2 class="text-base font-semibold sm:text-lg">Como posso te ajudar com o CAR hoje?</h2>
+                        <div class="flex flex-wrap gap-2">
+                            <button v-for="sugestao in perguntasSugeridas" :key="sugestao" type="button"
+                                class="btn btn-sm rounded-full border-base-content/15 bg-base-200/70 hover:bg-base-200"
+                                @click="setPergunta(sugestao)">
+                                {{ sugestao }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <Mensagem ref="mensagemRef" v-if="mensagensRaiz.length > 0" :map-mensagens="mapMensagens"
                     :ids="mensagensRaiz" />
             </div>
         </div>
-        <form @submit.prevent="enviarMensagem" class="mx-auto w-full max-w-3xl px-1">
-            <label for="pergunta"
-                class="relative flex min-h-14 cursor-text items-center justify-between gap-2 rounded-[28px] border border-base-content/10 bg-base-300 px-3 py-2 text-base-content shadow-lg"
-                @click="editable?.focus()">
 
-                <!-- placeholder -->
-                <span v-if="!pergunta.trim()"
-                    class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 select-none text-base-content/50">
-                    Digite sua mensagem...
-                </span>
-                <div class="flex w-full max-h-52 items-center overflow-y-auto">
-                    <div ref="editable" autofocus="true" id="pergunta" contenteditable="true" role="textbox"
-                        aria-multiline="true"
-                        class="min-h-6 w-full wrap-break-word bg-transparent py-1 px-1 font-medium whitespace-pre-wrap focus:outline-none"
-                        @input="pergunta = editable?.innerText ?? ''"
-                        @keydown="if ($event.key === 'Enter') { if (!$event.shiftKey) { $event.preventDefault(); enviarMensagem(); } }"
-                        @paste="handlePaste">
+        <div class="sticky bottom-0 z-10 bg-linear-to-t from-base-100 via-base-100/95 to-transparent pt-3">
+            <form @submit.prevent="enviarMensagem" class="mx-auto w-full max-w-3xl">
+                <label for="pergunta"
+                    class="relative flex cursor-text items-end gap-2 rounded-[28px] border border-base-content/12 bg-base-300 px-3 py-2 shadow-lg"
+                    :class="{ 'opacity-70': enviandoMensagem }" @click="editable?.focus()">
+                    <span v-if="!pergunta.trim()"
+                        class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 select-none text-base-content/55">
+                        Digite sua mensagem...
+                    </span>
+
+                    <div class="flex w-full items-center overflow-hidden">
+                        <div id="pergunta" ref="editable" role="textbox" tabindex="0" aria-multiline="true"
+                            aria-label="Mensagem para o assistente" contenteditable="true"
+                            class="chat-input-editor min-h-6 w-full bg-transparent px-1 py-1.5 whitespace-pre-wrap wrap-break-word focus:outline-none"
+                            @input="handleInput" @keydown="handleKeydown" @paste="handlePaste" />
                     </div>
-                </div>
 
-                <button class="btn btn-neutral text-neutral-content h-9 w-9 btn-circle p-0"
-                    :disabled="!pergunta.trim() || enviandoMensagem">
-                    <i class="bi bi-arrow-up-short text-4xl h-9 w-9"></i>
-                </button>
-            </label>
-        </form>
+                    <button class="btn btn-neutral h-9 w-9 btn-circle p-0" type="submit" :aria-busy="enviandoMensagem"
+                        :disabled="!pergunta.trim() || enviandoMensagem">
+                        <span v-if="enviandoMensagem" class="loading loading-spinner loading-sm"></span>
+                        <i v-else class="bi bi-arrow-up-short text-4xl leading-none"></i>
+                    </button>
+                </label>
 
+            </form>
+        </div>
     </div>
 </template>

@@ -7,15 +7,14 @@ import DjangoForm from '@/components/form/DjangoForm.vue'
 
 defineProps<{ form: DjangoFormData }>();
 
-const page = usePage();
+const page = usePage<{ urls: Record<string, string> }>();
 </script>
 
 <template>
     <LayoutAnonimo>
-
-        <div class="flex grow min-h-0 items-center justify-center py-4 sm:py-8">
-            <div class="card card-sm w-full max-w-md overflow-hidden">
-                <div class="card bg-base-200 card-border border-base-300 card-sm overflow-hidden">
+        <div class="mx-auto flex w-full max-w-5xl grow min-h-0 items-center justify-center py-4 sm:py-8">
+            <div class="card card-sm w-full max-w-md overflow-hidden shadow-sm">
+                <div class="card bg-base-200 card-border border-base-300 card-sm overflow-hidden rounded-3xl">
                     <div class="border-base-300 border-b border-dashed">
                         <div class="flex items-center gap-2 p-4">
                             <div class="grow">
@@ -26,7 +25,7 @@ const page = usePage();
                             </div>
                         </div>
                     </div>
-                    <Form :action="page.props.urls['entrar']" method="post" class="card-body gap-4">
+                    <Form :action="page.props.urls['entrar']" method="post" class="card-body gap-4 sm:gap-5">
                         <p class="text-xs opacity-60">Digite suas credenciais para acessar sua conta</p>
 
                         <DjangoForm :form="form" />
@@ -35,7 +34,7 @@ const page = usePage();
                             <input name="remember" type="checkbox" class="toggle toggle-xs" checked>
                             Lembrar de mim
                         </label>
-                        <div class="card-actions flex flex-col items-center justify-center gap-4">
+                        <div class="card-actions flex flex-col items-center justify-center gap-3">
                             <button class="btn btn-neutral btn-block">Entrar</button>
                             <Link :href="page.props.urls['cadastrar']" class="link link-hover">Não tem conta? Cadastrar
                             </Link>
