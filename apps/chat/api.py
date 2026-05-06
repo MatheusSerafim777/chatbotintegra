@@ -156,9 +156,7 @@ def curtir_mensagem(
     id_mensagem: int,
     payload: CurtirMensagemSchema,
 ):
-    mensagem = get_object_or_404(
-        Mensagem, id=id_mensagem, conversa__usuario=request.user
-    )
+    mensagem = get_object_or_404(Mensagem, id=id_mensagem)
     mensagem.curtido = payload.curtido
     mensagem.save(update_fields=['curtido'])
     return {'curtido': mensagem.curtido}
