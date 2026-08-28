@@ -46,7 +46,7 @@ def normalize(text: str) -> str:
 
 class Rag:
     chat = ChatOpenAI(
-        model='gpt-5.6-luna',
+        model='gpt-4.1-nano-2025-04-14',
         temperature=0.5,
         api_key=settings.OPENAI_API_KEY,
     )
@@ -234,21 +234,11 @@ class Rag:
         return qs
 
     @staticmethod
-    def top_k_chunks(  # noqa: PLR0914
-        query: str,
-        k: int = 5,
-        tipo_documento: Documento.Tipo | None = None,
-    ) -> list[str]:  # noqa
+    def top_k_chunks(query: str, k: int = 5) -> list[str]:  # noqa
         embedding_query = Rag.embedding.embed_query(query)
 
-        chunks_base = ChunkDocumeto.objects.all()
-        if tipo_documento:
-            chunks_base = chunks_base.filter(
-                documento__tipo=tipo_documento,
-            )
-
         ranked_by_bm25 = (
-            chunks_base.annotate(
+            ChunkDocumeto.objects.annotate(
                 score=BM25Score('id'),
                 rank=Window(expression=Rank(), order_by=F('score').desc()),
             )
@@ -260,29 +250,25 @@ class Rag:
             .order_by('-score')
         )
 
-        ranked_by_semantic = chunks_base.annotate(
+        ranked_by_semantic = ChunkDocumeto.objects.annotate(
             score=CosineDistance('embedding', embedding_query),
             rank=Window(expression=Rank(), order_by=F('score').asc()),
         ).order_by('score')
 
-        if tipo_documento is None:
-            response: ClassificacaoResponse = httpx.post(
-                'http://redeneuralbert:8000/classificar',
-                json={'texto': query},
-                timeout=10,
-            ).json()
+        response: ClassificacaoResponse = httpx.post(
+            'http://redeneuralbert:8000/classificar',
+            json={'texto': query},
+        ).json()
 
-            tipo_classificado = Rag.MAPA_CLASSE_API_PARA_MODEL.get(
-                response['classe']
+        tipo_documento = Rag.MAPA_CLASSE_API_PARA_MODEL.get(response['classe'])
+        CONFIANCA_MINIMA = 0.6 + 1
+        if response['confianca'] >= CONFIANCA_MINIMA and tipo_documento:
+            ranked_by_bm25 = ranked_by_bm25.filter(
+                documento__tipo=tipo_documento
             )
-            CONFIANCA_MINIMA = 0.6
-            if response['confianca'] >= CONFIANCA_MINIMA and tipo_classificado:
-                ranked_by_bm25 = ranked_by_bm25.filter(
-                    documento__tipo=tipo_classificado
-                )
-                ranked_by_semantic = ranked_by_semantic.filter(
-                    documento__tipo=tipo_classificado
-                )
+            ranked_by_semantic = ranked_by_semantic.filter(
+                documento__tipo=tipo_documento
+            )
 
         ranked_by_bm25 = ranked_by_bm25[: k * 4]
         ranked_by_semantic = ranked_by_semantic[: k * 4]
@@ -323,7 +309,7 @@ class Rag:
         return [chunk.conteudo for chunk in qs]
 
     @staticmethod
-    def run_legacy(
+    def run(
         query: str,
         mensagens: QuerySet[Mensagem],
     ) -> Generator[str, None, None]:
@@ -366,13 +352,3 @@ REGRAS DE COMPORTAMENTO:
 
         for resposta in Rag.chat.stream(mensagens_formatadas):
             yield resposta.content
-
-    @staticmethod
-    def run(
-        query: str,
-        mensagens: QuerySet[Mensagem],
-    ) -> Generator[str, None, None]:
-        """Executa o workflow LangGraph mantendo o contrato de streaming."""
-        from chat.graph import run_chat_graph  # noqa: PLC0415
-
-        yield from run_chat_graph(query, mensagens)

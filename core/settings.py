@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'django.contrib.postgres',
     # Third party apps
     'django_vite',
     'inertia',
@@ -176,7 +175,7 @@ STATICFILES_DIRS = [DJANGO_VITE_ASSETS_PATH, BASE_DIR / 'frontend' / 'static']
 
 INERTIA_LAYOUT = 'base.html'
 INERTIA_SSR_URL = inertia_settings.INERTIA_SSR_URL
-INERTIA_SSR_ENABLED = False
+INERTIA_SSR_ENABLED = True
 INERTIA_JSON_ENCODER = CustomJsonEncoder
 
 # Default primary key field type
